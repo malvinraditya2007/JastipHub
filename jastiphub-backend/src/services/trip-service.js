@@ -116,7 +116,7 @@ export function createTripService(repositories) {
     async save(ownerId, data, existingId) {
       return repositories.transaction(async (transaction) => {
         const tripId = existingId || data.id || randomUUID();
-        const existing = await transaction.trips.findById(tripId, { lock: true });
+        const existing = await transaction.trips.findById(tripId);
         const transactionService = createTripService(transaction);
 
         if (existingId && (!existing || existing.owner_id !== ownerId)) throw missing();

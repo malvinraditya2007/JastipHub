@@ -33,8 +33,8 @@ export function requireUser(req, res, next) {
 export function allowedAppOrigins(config) {
   const allowed = new Set([config.origin]);
   if (!config.production) {
-    allowed.add('http://127.0.0.1:5173');
-    allowed.add('http://localhost:5173');
+    allowed.add(`http://127.0.0.1:${config.port}`);
+    allowed.add(`http://localhost:${config.port}`);
   }
   return allowed;
 }

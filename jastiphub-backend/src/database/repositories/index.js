@@ -9,7 +9,7 @@ import {
 } from './interactions.js';
 import { mediaRepository } from './media.js';
 
-// Semua repository dalam transaksi memakai koneksi MySQL yang sama.
+// Repository transaksi memakai query langsung pada koneksi yang sedang dikunci.
 export function createRepositories(database) {
   const query = database.query;
   return {
@@ -23,11 +23,6 @@ export function createRepositories(database) {
     media: mediaRepository(query),
     system: {
       ping: () => query('SELECT 1'),
-      async hasMigrations() {
-        const [{ total }] = await query(`SELECT COUNT(*) AS total FROM information_schema.tables
-          WHERE table_schema = DATABASE() AND table_name = 'schema_migrations'`);
-        return Number(total) > 0;
-      },
     },
     transaction(work) {
       return database.transaction((transactionQuery) =>

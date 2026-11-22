@@ -2,12 +2,13 @@
 
 ## Keputusan implementasi
 
-Kode dibagi menjadi route HTTP di `src/routes.js`, logic aplikasi di `src/services/`, dan seluruh query/koneksi/migration di `src/database/`. Alurnya route → service → repository → MySQL. Folder tes dan dependensi testing tidak disertakan.
+Kode dibagi menjadi route HTTP di `src/routes.js`, logic aplikasi di `src/services/`, dan seluruh query/koneksi/migration di `src/database/`. Alurnya route → service → repository → SQLite. Folder tes dan dependensi testing tidak disertakan.
 
-- Frontend React/Vite/React Router. Backend JavaScript ESM dengan Express 5. Database MySQL/InnoDB, koneksi pool dan parameter SQL melalui `mysql2`.
+- Frontend React/Vite/React Router. Backend JavaScript ESM dengan Express 5 dan SQLite bawaan Node.js (`node:sqlite`).
 - Satu akun bisa membuat trip sekaligus menjadi penitip. Tidak ada pemilihan role saat daftar.
 - Login dengan username dan password. Tidak ada email, SMTP, atau reset berbasis email.
-- Saat daftar, kode pemulihan acak 128-bit ditampilkan sekali. Database hanya menyimpan hash kode. Reset membutuhkan username, kode tersebut, dan password baru; seluruh sesi dicabut dan kode diganti.
+- Di luar mode lokal, kode pemulihan acak 128-bit ditampilkan sekali saat daftar. Database hanya menyimpan hash kode. Reset mengganti kode dan mencabut seluruh sesi.
+- Di mode development lokal, file pembuka privat di samping SQLite menyiapkan sesi reset browser selama 30 menit. Setelah membuka file, reset cukup memakai username dan password baru.
 - Sesi server berlaku 14 hari. Cookie HTTP-only, SameSite=Lax secara default (dapat diatur melalui COOKIE_SAME_SITE), Secure pada production. Password memakai scrypt (N=32768, r=8, p=3, salt unik). Token sesi disimpan sebagai SHA-256.
 - Request mutasi wajib menyertakan Origin aplikasi dan `X-Requested-With: JastipHub`. Jika sudah login, wajib `X-CSRF-Token` dari respons sesi/login.
 - Respons publik tidak menyertakan nomor WhatsApp, hash password, hash recovery, atau data sesi. Nomor lengkap hanya pada profil sendiri dan link aksi kontak untuk pengguna login.
@@ -38,11 +39,12 @@ Awalan seluruh endpoint `/api/v1`. `Auth` berarti membutuhkan sesi dan CSRF untu
 | Metode dan path | Akses | Input | Data sukses |
 |---|---|---|---|
 | `GET /health` | Publik | — | `{status,database}` setelah query database berhasil |
-| `GET /auth/session` | Publik | — | `{user:null atau profil sendiri,csrfToken,demoEnabled}` |
-| `POST /auth/register` | Publik | `{name,handle,password,phone}` | `{user,csrfToken,recoveryCode}` dan cookie; 201 |
+| `GET /auth/session` | Publik | — | User, CSRF, dan status `localPasswordReset` serta `localResetReady` |
+| `POST /auth/register` | Publik | `{name,handle,password,phone}` | `{user,csrfToken}`, kode pemulihan di luar mode lokal, dan cookie; 201 |
 | `POST /auth/login` | Publik | `{handle,password}` | `{user,csrfToken}` dan cookie |
 | `POST /auth/demo` | Development | — | Sesi Aldo jika demo aktif dan sudah di-seed |
-| `POST /auth/reset-password` | Publik | `{handle,recoveryCode,password}` | `{recoveryCode,message}`; kode pengganti, cookie dibersihkan |
+| `POST /auth/local-reset/unlock` | Development lokal | `{key}` dari file pembuka privat | `{unlocked:true}` dan cookie sesi lokal |
+| `POST /auth/reset-password` | Sesi lokal atau pemilik kode | `{handle,password}` untuk reset lokal; di luar mode lokal tambahkan `recoveryCode` | `{message}` dan kode pengganti di luar mode lokal; cookie login dibersihkan |
 | `POST /auth/logout` | Auth | — | `{loggedOut:true}`; sesi dicabut |
 | `GET /me` | Auth | — | Profil sendiri, termasuk WhatsApp |
 | `PATCH /me` | Auth | `{name,handle,phone,city,avatar}` | Profil sendiri terbaru |

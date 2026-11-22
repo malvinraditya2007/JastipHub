@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
-import { errorHandler, missing } from './errors.js';
+import { missing } from './errors.js';
 import { browserProtection } from './security.js';
 import { rateLimitRequests } from './http.js';
 import { registerRoutes, SESSION_COOKIE } from './routes.js';
@@ -74,7 +74,6 @@ export async function createApp(database, config) {
   registerRoutes(api, services, config);
 
   api.use((req, res, next) => next(missing()));
-  app.use((req, res, next) => next(missing()));
-  app.use(errorHandler);
+  app.use(['/api', '/uploads'], (req, res, next) => next(missing()));
   return app;
 }

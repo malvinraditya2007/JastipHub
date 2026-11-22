@@ -1,0 +1,10 @@
+node_modules/
+dist/
+/assets/
+.qa/
+.data/
+.env
+.env.*
+package-lock.json
+jastiphub-backend/src/database/migrations/
+jastiphub-frontend/public/art/

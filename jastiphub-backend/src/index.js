@@ -1,23 +1,45 @@
+import { createServer } from 'node:http';
 import { configuration } from './config.js';
 import { database } from './database/connection.js';
+import { migrate } from './database/migrate.js';
+import { seedDemo } from './database/seed.js';
 import { createRepositories } from './database/repositories/index.js';
 import { createApp } from './app.js';
+import { errorHandler, missing } from './errors.js';
+import { writeLocalResetLauncher } from './local-reset.js';
+import { token } from './security.js';
+import { mountFrontend } from './web.js';
 
-const config = configuration();
-const db = database(config.database);
-const repositories = createRepositories(db);
+let db;
 let server;
+let vite;
 let cleanup;
 try {
-  await repositories.system.ping();
-  if (!(await repositories.system.hasMigrations()))
-    throw new Error('Database belum dimigrasi. Jalankan npm run db:migrate.');
+  const settings = configuration();
+  const config = { ...settings, localResetKey: settings.localPasswordReset ? token() : null };
+  const dev = process.argv.includes('--dev');
+  if (dev && config.production)
+    throw new Error('Gunakan npm run build lalu npm start untuk production.');
+  db = database(config.databasePath);
+  await migrate(db);
+  if (config.demo) await seedDemo(db);
+  const repositories = createRepositories(db);
   const app = await createApp(db, config);
-  server = app.listen(config.port, config.host, () =>
-    console.log(
-      `JastipHub API: http://${config.host}:${config.port} (${config.production ? 'production' : 'development'})`,
-    ),
-  );
+  server = createServer(app);
+  vite = await mountFrontend(app, server, dev);
+  app.use((req, res, next) => next(missing()));
+  app.use(errorHandler);
+
+  server.listen(config.port, config.host, async () => {
+    if (config.localResetKey) {
+      try {
+        await writeLocalResetLauncher(config);
+      } catch {
+        console.error('File pembuka JastipHub lokal gagal dibuat.');
+      }
+    }
+    console.log(`JastipHub: http://${config.host}:${config.port}`);
+  });
   server.on('error', (error) => {
     console.error(error.message);
     process.exitCode = 1;
@@ -32,16 +54,18 @@ try {
   );
   cleanup.unref();
 } catch (error) {
-  console.error(
-    `Backend gagal dimulai: ${error.code || error.message}. Periksa konfigurasi MySQL di .env.`,
-  );
-  await db.close();
+  console.error(`JastipHub gagal dimulai: ${error.message}`);
+  await stop();
   process.exitCode = 1;
 }
 async function stop() {
+  if (!db) return;
+  const connection = db;
+  db = undefined;
   clearInterval(cleanup);
+  await vite?.close();
   if (server) await new Promise((resolve) => server.close(resolve));
-  await db.close();
+  await connection.close();
 }
 process.once('SIGINT', () => void stop());
 process.once('SIGTERM', () => void stop());

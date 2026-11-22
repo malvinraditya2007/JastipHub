@@ -1,119 +1,108 @@
-CREATE TABLE IF NOT EXISTS users (
-  id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  handle VARCHAR(30) NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  recovery_hash CHAR(64) CHARACTER SET ascii NOT NULL,
-  phone VARCHAR(15) NOT NULL,
-  city VARCHAR(100) NOT NULL DEFAULT '',
-  avatar VARCHAR(255) NOT NULL DEFAULT '',
-  is_demo BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY users_handle_unique (handle)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE users (
+  id TEXT NOT NULL PRIMARY KEY,
+  name TEXT NOT NULL,
+  handle TEXT NOT NULL COLLATE NOCASE UNIQUE,
+  password_hash TEXT NOT NULL,
+  recovery_hash TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  city TEXT NOT NULL DEFAULT '',
+  avatar TEXT NOT NULL DEFAULT '',
+  is_demo INTEGER NOT NULL DEFAULT 0 CHECK (is_demo IN (0, 1)),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+) STRICT;
 
-CREATE TABLE IF NOT EXISTS sessions (
-  token_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
-  user_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  csrf_token CHAR(64) CHARACTER SET ascii NOT NULL,
-  expires_at DATETIME NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX sessions_expires (expires_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE sessions (
+  token_hash TEXT NOT NULL PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  csrf_token TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+) STRICT;
+CREATE INDEX sessions_expires ON sessions(expires_at);
 
-CREATE TABLE IF NOT EXISTS media (
-  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
-  owner_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  purpose ENUM('avatar','cover') NOT NULL,
-  filename VARCHAR(100) NOT NULL,
-  size INT UNSIGNED NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE KEY media_filename_unique (filename),
-  INDEX media_owner (owner_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE media (
+  id TEXT NOT NULL PRIMARY KEY,
+  owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  purpose TEXT NOT NULL CHECK (purpose IN ('avatar', 'cover')),
+  filename TEXT NOT NULL UNIQUE,
+  size INTEGER NOT NULL CHECK (size >= 0),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+) STRICT;
+CREATE INDEX media_owner ON media(owner_id);
 
-CREATE TABLE IF NOT EXISTS trips (
-  id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
-  owner_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  city VARCHAR(100) NOT NULL,
-  country VARCHAR(100) NOT NULL,
-  country_key VARCHAR(100) NOT NULL,
-  start_date DATE NULL,
-  end_date DATE NULL,
-  fee_type ENUM('percentage','fixed_per_item') NOT NULL DEFAULT 'percentage',
-  fee_value DECIMAL(14,2) NULL,
-  cover VARCHAR(255) NULL,
-  thumb VARCHAR(100) NULL,
-  status ENUM('draft','published') NOT NULL DEFAULT 'draft',
-  version INT UNSIGNED NOT NULL DEFAULT 1,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (owner_id) REFERENCES users(id),
+CREATE TABLE trips (
+  id TEXT NOT NULL PRIMARY KEY,
+  owner_id TEXT NOT NULL REFERENCES users(id),
+  city TEXT NOT NULL,
+  country TEXT NOT NULL,
+  country_key TEXT NOT NULL,
+  start_date TEXT,
+  end_date TEXT,
+  fee_type TEXT NOT NULL DEFAULT 'percentage' CHECK (fee_type IN ('percentage', 'fixed_per_item')),
+  fee_value REAL,
+  cover TEXT,
+  thumb TEXT,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+  version INTEGER NOT NULL DEFAULT 1 CHECK (version > 0),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT trip_dates CHECK (end_date IS NULL OR start_date IS NULL OR end_date >= start_date),
   CONSTRAINT trip_fee CHECK (fee_value IS NULL OR (fee_value >= 0 AND (fee_type <> 'percentage' OR fee_value <= 100))),
-  CONSTRAINT trip_published CHECK (status <> 'published' OR (start_date IS NOT NULL AND end_date IS NOT NULL AND fee_value IS NOT NULL)),
-  INDEX trips_public (status,end_date,start_date),
-  INDEX trips_destination (country_key,status,end_date),
-  INDEX trips_owner (owner_id,status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT trip_published CHECK (status <> 'published' OR (start_date IS NOT NULL AND end_date IS NOT NULL AND fee_value IS NOT NULL))
+) STRICT;
+CREATE INDEX trips_public ON trips(status, end_date, start_date);
+CREATE INDEX trips_destination ON trips(country_key, status, end_date);
+CREATE INDEX trips_owner ON trips(owner_id, status);
 
-CREATE TABLE IF NOT EXISTS trip_stops (
-  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
-  trip_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  name VARCHAR(150) NOT NULL,
-  category VARCHAR(150) NOT NULL DEFAULT '',
-  day_offset SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  position SMALLINT UNSIGNED NOT NULL,
-  FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE,
-  UNIQUE KEY trip_stop_name_unique (trip_id,name),
-  UNIQUE KEY trip_stop_position_unique (trip_id,position)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE trip_stops (
+  id TEXT NOT NULL PRIMARY KEY,
+  trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  name TEXT NOT NULL COLLATE NOCASE,
+  category TEXT NOT NULL DEFAULT '',
+  day_offset INTEGER NOT NULL DEFAULT 0 CHECK (day_offset >= 0),
+  position INTEGER NOT NULL CHECK (position >= 0),
+  UNIQUE (trip_id, name),
+  UNIQUE (trip_id, position)
+) STRICT;
 
-CREATE TABLE IF NOT EXISTS saved_trips (
-  user_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  trip_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (user_id,trip_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE saved_trips (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, trip_id)
+) STRICT;
+CREATE INDEX saved_trips_trip ON saved_trips(trip_id);
 
-CREATE TABLE IF NOT EXISTS trip_contacts (
-  user_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  trip_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  first_contact_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_contact_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (user_id,trip_id),
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (trip_id) REFERENCES trips(id),
-  INDEX contacts_history (user_id,last_contact_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE trip_contacts (
+  user_id TEXT NOT NULL REFERENCES users(id),
+  trip_id TEXT NOT NULL REFERENCES trips(id),
+  first_contact_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_contact_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, trip_id)
+) STRICT;
+CREATE INDEX contacts_history ON trip_contacts(user_id, last_contact_at);
+CREATE INDEX contacts_trip ON trip_contacts(trip_id);
 
-CREATE TABLE IF NOT EXISTS reviews (
-  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
-  author_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  trip_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  rating TINYINT UNSIGNED NOT NULL,
-  text VARCHAR(1200) NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (author_id,trip_id) REFERENCES trip_contacts(user_id,trip_id),
-  UNIQUE KEY reviews_author_trip_unique (author_id,trip_id),
-  CONSTRAINT reviews_rating CHECK (rating BETWEEN 1 AND 5),
-  INDEX reviews_trip (trip_id,created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE reviews (
+  id TEXT NOT NULL PRIMARY KEY,
+  author_id TEXT NOT NULL,
+  trip_id TEXT NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  text TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (author_id, trip_id) REFERENCES trip_contacts(user_id, trip_id),
+  UNIQUE (author_id, trip_id)
+) STRICT;
+CREATE INDEX reviews_trip ON reviews(trip_id, created_at);
 
-CREATE TABLE IF NOT EXISTS reports (
-  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
-  target_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  author_id VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
-  reason VARCHAR(100) NOT NULL,
-  details VARCHAR(2000) NOT NULL DEFAULT '',
-  status ENUM('received','reviewing','resolved') NOT NULL DEFAULT 'received',
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (target_id) REFERENCES users(id),
-  FOREIGN KEY (author_id) REFERENCES users(id),
-  INDEX reports_queue (status,created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE reports (
+  id TEXT NOT NULL PRIMARY KEY,
+  target_id TEXT NOT NULL REFERENCES users(id),
+  author_id TEXT REFERENCES users(id),
+  reason TEXT NOT NULL,
+  details TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'received' CHECK (status IN ('received', 'reviewing', 'resolved')),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+) STRICT;
+CREATE INDEX reports_queue ON reports(status, created_at);

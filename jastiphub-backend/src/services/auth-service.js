@@ -13,6 +13,22 @@ import { createUserService } from './user-service.js';
 
 export const SESSION_DURATION = 14 * 24 * 60 * 60 * 1000;
 
+async function changeLocalPassword(repositories, { handle, password }) {
+  const passwordHash = await hashPassword(password);
+  await repositories.transaction(async (transaction) => {
+    const account = await transaction.users.findByHandle(handle);
+    if (!account) {
+      throw new ApiError(404, 'NOT_FOUND', 'Akun tidak ditemukan.');
+    }
+    await transaction.users.updateCredentials(
+      account.id,
+      passwordHash,
+      recoveryHash(recoveryCode()),
+    );
+    await transaction.sessions.deleteByUser(account.id);
+  });
+}
+
 export async function createAuthService(repositories, config) {
   const users = createUserService(repositories);
   const dummyPasswordHash = await hashPassword(token());
@@ -53,7 +69,8 @@ export async function createAuthService(repositories, config) {
         });
         return makeSession(transaction, id, previousSessionHash);
       });
-      return { ...(await loginResult(id, session)), recoveryCode: recovery };
+      const result = await loginResult(id, session);
+      return config.localPasswordReset ? result : { ...result, recoveryCode: recovery };
     },
 
     async login(data, previousSessionHash) {
@@ -66,7 +83,7 @@ export async function createAuthService(repositories, config) {
         throw new ApiError(401, 'INVALID_CREDENTIALS', 'Username atau password belum sesuai.');
       }
       const session = await repositories.transaction(async (transaction) => {
-        const current = await transaction.users.findById(account.id, { lock: true });
+        const current = await transaction.users.findById(account.id);
         if (!current || current.password_hash !== account.password_hash) {
           throw new ApiError(401, 'INVALID_CREDENTIALS', 'Password berubah. Silakan masuk lagi.');
         }
@@ -86,11 +103,17 @@ export async function createAuthService(repositories, config) {
       return loginResult(account.id, session);
     },
 
+    async resetLocalPassword(data) {
+      if (!config.localPasswordReset) throw missing();
+      await changeLocalPassword(repositories, data);
+      return { message: 'Password diperbarui.' };
+    },
+
     async resetPassword(data) {
       const passwordHash = await hashPassword(data.password);
       const recovery = recoveryCode();
       await repositories.transaction(async (transaction) => {
-        const account = await transaction.users.findByHandle(data.handle, { lock: true });
+        const account = await transaction.users.findByHandle(data.handle);
         if (
           !account ||
           account.is_demo ||

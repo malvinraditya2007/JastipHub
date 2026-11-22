@@ -33,7 +33,7 @@ export function createInteractionService(repositories) {
 
     async openContact(tripId, userId, stopId) {
       return repositories.transaction(async (transaction) => {
-        const trip = await transaction.trips.findById(tripId, { lock: true });
+        const trip = await transaction.trips.findById(tripId);
         if (!trip || trip.status !== 'published') throw missing();
         if (trip.owner_id === userId)
           throw new ApiError(
@@ -75,8 +75,6 @@ export function createInteractionService(repositories) {
 
     async saveReview(tripId, userId, data) {
       return repositories.transaction(async (transaction) => {
-        const locked = await transaction.trips.findById(tripId, { lock: true });
-        if (!locked) throw missing();
         const trip = await createTripService(transaction).getTrip(tripId, userId);
         const allowed = await createInteractionService(transaction).eligibility(trip, userId);
         if (!allowed.eligible)

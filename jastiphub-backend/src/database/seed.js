@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { configuration } from '../config.js';
 import { database } from './connection.js';
+import { migrate } from './migrate.js';
 import { hashPassword, recoveryCode, recoveryHash } from '../security.js';
 import { countryKey } from '../config/destinations.js';
 import { todayInJakarta } from '../utils/date.js';
@@ -11,8 +12,11 @@ export async function seedDemo(db) {
     d.setUTCDate(d.getUTCDate() + offset);
     return d.toISOString().slice(0, 10);
   };
-  const passwordHash = await hashPassword(randomUUID());
   await db.transaction(async (query) => {
+    const [seeded] = await query("SELECT id FROM users WHERE id = 'aldo' AND is_demo = 1");
+    if (seeded) return;
+
+    const passwordHash = await hashPassword(randomUUID());
     const people = [
       ['owen', 'Owen', 'owenjastip', '12025550100'],
       ['nadia', 'Nadia', 'nadiajastip', '12025550101'],
@@ -21,7 +25,7 @@ export async function seedDemo(db) {
     ];
     for (const [id, name, handle, phone] of people) {
       await query(
-        'INSERT INTO users (id,name,handle,password_hash,recovery_hash,phone,city,avatar,is_demo) VALUES (?,?,?,?,?,?,?,?,TRUE) ON DUPLICATE KEY UPDATE id=VALUES(id)',
+        'INSERT INTO users (id,name,handle,password_hash,recovery_hash,phone,city,avatar,is_demo) VALUES (?,?,?,?,?,?,?,?,1) ON CONFLICT(id) DO NOTHING',
         [
           id,
           name,
@@ -130,11 +134,11 @@ export async function seedDemo(db) {
     }
     for (const id of ['seoul', 'singapura'])
       await query(
-        'INSERT INTO saved_trips (user_id,trip_id) VALUES (?,?) ON DUPLICATE KEY UPDATE user_id=VALUES(user_id)',
+        'INSERT INTO saved_trips (user_id,trip_id) VALUES (?,?) ON CONFLICT(user_id, trip_id) DO NOTHING',
         ['aldo', id],
       );
     await query(
-      'INSERT INTO trip_contacts (user_id,trip_id) VALUES (?,?) ON DUPLICATE KEY UPDATE user_id=VALUES(user_id)',
+      'INSERT INTO trip_contacts (user_id,trip_id) VALUES (?,?) ON CONFLICT(user_id, trip_id) DO NOTHING',
       ['aldo', 'osaka'],
     );
   });
@@ -142,9 +146,10 @@ export async function seedDemo(db) {
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('/src/database/seed.js')) {
   const config = configuration();
   if (config.production || !config.demo)
-    throw new Error('Seed demo hanya untuk development dengan ENABLE_DEMO=true.');
-  const db = database(config.database);
+    throw new Error('Seed demo hanya tersedia saat demo diaktifkan di development.');
+  const db = database(config.databasePath);
   try {
+    await migrate(db);
     await seedDemo(db);
     console.log('Data demo disiapkan. Login melalui tombol demo, tanpa password bersama.');
   } finally {

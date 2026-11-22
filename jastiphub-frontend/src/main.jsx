@@ -3,19 +3,25 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
 import '@fontsource-variable/plus-jakarta-sans';
 import './styles.css';
-import { Store } from './store';
-import { Layout, Notices, Missing, Gate } from './ui';
-import Explore from './Explore';
-import { Detail, MyTrips, Jastiper } from './Trips';
-import { Account, Review } from './Account';
-import { Editor } from './Editor';
-import { Auth, ResetPassword } from './Auth';
+import { Layout } from './components/Layout';
+import { Gate, Missing, Notices } from './components/UI';
+import { AuthPage } from './pages/AuthPage';
+import { ExplorePage } from './pages/ExplorePage';
+import { JastiperPage } from './pages/JastiperPage';
+import { MyTripsPage } from './pages/MyTripsPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { ReviewPage } from './pages/ReviewPage';
+import { TripDetailPage } from './pages/TripDetailPage';
+import { TripEditorPage } from './pages/TripEditorPage';
+import { Store } from './services/store';
 
 const PAGE_TITLES = {
   '/': 'Cari Trip',
   '/my-trips': 'My Trips',
   '/login': 'Masuk',
   '/register': 'Daftar',
+  '/reset-password': 'Atur Ulang Password',
   '/profile': 'Profil',
   '/trips/baru': 'Buat Trip',
 };
@@ -33,14 +39,14 @@ function App() {
     <>
       <Routes>
         <Route element={<Layout />}>
-          <Route index element={<Explore />} />
-          <Route path="trips/:id" element={<Detail key={location.pathname} />} />
-          <Route path="jastiper/:id" element={<Jastiper key={location.pathname} />} />
+          <Route index element={<ExplorePage />} />
+          <Route path="trips/:id" element={<TripDetailPage key={location.pathname} />} />
+          <Route path="jastiper/:id" element={<JastiperPage key={location.pathname} />} />
           <Route
             path="my-trips"
             element={
               <Gate>
-                <MyTrips />
+                <MyTripsPage />
               </Gate>
             }
           />
@@ -48,7 +54,7 @@ function App() {
             path="trips/baru"
             element={
               <Gate>
-                <Editor key="new" />
+                <TripEditorPage key="new" />
               </Gate>
             }
           />
@@ -56,7 +62,7 @@ function App() {
             path="trips/:id/edit"
             element={
               <Gate>
-                <Editor key={location.pathname} />
+                <TripEditorPage key={location.pathname} />
               </Gate>
             }
           />
@@ -64,7 +70,7 @@ function App() {
             path="profile"
             element={
               <Gate>
-                <Account />
+                <ProfilePage />
               </Gate>
             }
           />
@@ -72,15 +78,15 @@ function App() {
             path="ulasan/:id"
             element={
               <Gate>
-                <Review />
+                <ReviewPage />
               </Gate>
             }
           />
           <Route path="*" element={<Missing />} />
         </Route>
-        <Route path="login" element={<Auth key="login" />} />
-        <Route path="register" element={<Auth key="register" register />} />
-        <Route path="reset-password" element={<ResetPassword />} />
+        <Route path="login" element={<AuthPage key="login" />} />
+        <Route path="register" element={<AuthPage key="register" register />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
       </Routes>
       <Notices />
     </>

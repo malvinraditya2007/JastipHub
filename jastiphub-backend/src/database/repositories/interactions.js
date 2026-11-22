@@ -18,7 +18,7 @@ export function bookmarkRepository(query) {
     save(userId, tripId) {
       return query(
         `INSERT INTO saved_trips (user_id, trip_id) VALUES (?, ?)
-         ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)`,
+         ON CONFLICT(user_id, trip_id) DO NOTHING`,
         [userId, tripId],
       );
     },
@@ -47,7 +47,7 @@ export function contactRepository(query) {
     save(userId, tripId) {
       return query(
         `INSERT INTO trip_contacts (user_id, trip_id) VALUES (?, ?)
-         ON DUPLICATE KEY UPDATE last_contact_at = CURRENT_TIMESTAMP`,
+         ON CONFLICT(user_id, trip_id) DO UPDATE SET last_contact_at = CURRENT_TIMESTAMP`,
         [userId, tripId],
       );
     },

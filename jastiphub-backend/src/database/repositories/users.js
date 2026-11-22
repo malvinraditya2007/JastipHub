@@ -10,17 +10,13 @@ const ratingJoin = `
 
 export function userRepository(query) {
   return {
-    async findById(id, { lock = false } = {}) {
-      const rows = await query(`SELECT * FROM users WHERE id = ? ${lock ? 'FOR UPDATE' : ''}`, [
-        id,
-      ]);
+    async findById(id) {
+      const rows = await query('SELECT * FROM users WHERE id = ?', [id]);
       return rows[0];
     },
 
-    async findByHandle(handle, { lock = false } = {}) {
-      const rows = await query(`SELECT * FROM users WHERE handle = ? ${lock ? 'FOR UPDATE' : ''}`, [
-        handle,
-      ]);
+    async findByHandle(handle) {
+      const rows = await query('SELECT * FROM users WHERE handle = ?', [handle]);
       return rows[0];
     },
 
@@ -53,17 +49,18 @@ export function userRepository(query) {
 
     updateProfile(id, profile) {
       return query(
-        `UPDATE users SET name = ?, handle = ?, phone = ?, city = ?, avatar = ? WHERE id = ?`,
+        `UPDATE users SET name = ?, handle = ?, phone = ?, city = ?, avatar = ?,
+         updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
         [profile.name, profile.handle, profile.phone, profile.city, profile.avatar, id],
       );
     },
 
     updateCredentials(id, passwordHash, recoveryHash) {
-      return query('UPDATE users SET password_hash = ?, recovery_hash = ? WHERE id = ?', [
-        passwordHash,
-        recoveryHash,
-        id,
-      ]);
+      return query(
+        `UPDATE users SET password_hash = ?, recovery_hash = ?,
+         updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [passwordHash, recoveryHash, id],
+      );
     },
   };
 }

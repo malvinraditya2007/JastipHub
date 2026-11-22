@@ -1,26 +1,38 @@
-import mysql from 'mysql2/promise';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 
-export function database(config) {
-  const pool = mysql.createPool(config);
-  const run = async (sql, values = [], connection = pool) =>
-    (await connection.execute(sql, values))[0];
+export function database(path) {
+  mkdirSync(dirname(path), { recursive: true });
+  const connection = new DatabaseSync(path, { timeout: 5000 });
+  connection.function('fold_text', { deterministic: true }, (text) =>
+    text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase(),
+  );
+  const query = (sql, values = []) => connection.prepare(sql).all(...values);
+
+  // Keep other requests out of the connection while a transaction awaits its own work.
+  let pending = Promise.resolve();
+  function enqueue(work) {
+    const result = pending.then(work);
+    pending = result.catch(() => {});
+    return result;
+  }
+
   return {
-    pool,
-    query: run,
-    async transaction(fn) {
-      const connection = await pool.getConnection();
-      try {
-        await connection.beginTransaction();
-        const result = await fn((sql, values = []) => run(sql, values, connection));
-        await connection.commit();
-        return result;
-      } catch (error) {
-        await connection.rollback();
-        throw error;
-      } finally {
-        connection.release();
-      }
+    query: (sql, values) => enqueue(() => query(sql, values)),
+    transaction(work) {
+      return enqueue(async () => {
+        connection.exec('BEGIN IMMEDIATE');
+        try {
+          const result = await work(query, (sql) => connection.exec(sql));
+          connection.exec('COMMIT');
+          return result;
+        } catch (error) {
+          if (connection.isTransaction) connection.exec('ROLLBACK');
+          throw error;
+        }
+      });
     },
-    close: () => pool.end(),
+    close: () => enqueue(() => connection.close()),
   };
 }

@@ -13,7 +13,7 @@ export async function createServices(repositories, config) {
     media: createMediaService(repositories, config),
     async health() {
       await repositories.system.ping();
-      return { status: 'ok', database: 'mysql' };
+      return { status: 'ok', database: 'sqlite' };
     },
   };
 }

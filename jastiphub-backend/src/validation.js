@@ -22,9 +22,6 @@ const phone = z
   .pipe(z.string().regex(/^\d{8,15}$/, 'Nomor WhatsApp harus 8–15 digit.'));
 export const registration = z.object({ name: text(100, 'Nama'), handle, password, phone }).strict();
 export const login = z.object({ handle, password: z.string().min(1).max(128) }).strict();
-export const reset = z
-  .object({ handle, recoveryCode: z.string().min(1).max(100), password })
-  .strict();
 export const profile = z
   .object({
     name: text(100, 'Nama'),

@@ -1,10 +1,12 @@
+const now = "strftime('%Y-%m-%dT%H:%M:%fZ', 'now')";
+
 export function sessionRepository(query) {
   return {
     async findActive(tokenHash) {
       const rows = await query(
         `SELECT sessions.*, users.id AS account_id
          FROM sessions JOIN users ON users.id = sessions.user_id
-         WHERE sessions.token_hash = ? AND sessions.expires_at > UTC_TIMESTAMP()`,
+         WHERE sessions.token_hash = ? AND sessions.expires_at > ${now}`,
         [tokenHash],
       );
       return rows[0];
@@ -14,7 +16,7 @@ export function sessionRepository(query) {
       return query(
         `INSERT INTO sessions (token_hash, user_id, csrf_token, expires_at)
          VALUES (?, ?, ?, ?)`,
-        [session.tokenHash, session.userId, session.csrfToken, session.expiresAt],
+        [session.tokenHash, session.userId, session.csrfToken, session.expiresAt.toISOString()],
       );
     },
 
@@ -27,7 +29,7 @@ export function sessionRepository(query) {
     },
 
     deleteExpired() {
-      return query('DELETE FROM sessions WHERE expires_at <= UTC_TIMESTAMP()');
+      return query(`DELETE FROM sessions WHERE expires_at <= ${now}`);
     },
   };
 }
