@@ -10,12 +10,12 @@ import {
 import { mediaRepository } from './media.js';
 
 // Repository transaksi memakai query langsung pada koneksi yang sedang dikunci.
-export function createRepositories(database) {
+export function createRepositories(database, transactional = false) {
   const query = database.query;
   return {
-    users: userRepository(query),
+    users: userRepository(query, transactional),
     sessions: sessionRepository(query),
-    trips: tripRepository(query),
+    trips: tripRepository(query, transactional),
     bookmarks: bookmarkRepository(query),
     contacts: contactRepository(query),
     reviews: reviewRepository(query),
@@ -26,7 +26,7 @@ export function createRepositories(database) {
     },
     transaction(work) {
       return database.transaction((transactionQuery) =>
-        work(createRepositories({ ...database, query: transactionQuery })),
+        work(createRepositories({ ...database, query: transactionQuery }, true)),
       );
     },
   };

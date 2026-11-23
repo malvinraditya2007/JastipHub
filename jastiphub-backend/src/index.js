@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { configuration } from './config.js';
 import { database } from './database/connection.js';
-import { migrate } from './database/migrate.js';
+import { initDatabase } from './database/init.js';
 import { seedDemo } from './database/seed.js';
 import { createRepositories } from './database/repositories/index.js';
 import { createApp } from './app.js';
@@ -20,8 +20,8 @@ try {
   const dev = process.argv.includes('--dev');
   if (dev && config.production)
     throw new Error('Gunakan npm run build lalu npm start untuk production.');
-  db = database(config.databasePath);
-  await migrate(db);
+  db = database(config.database);
+  await initDatabase(db);
   if (config.demo) await seedDemo(db);
   const repositories = createRepositories(db);
   const app = await createApp(db, config);

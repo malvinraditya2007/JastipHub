@@ -1,38 +1,69 @@
-import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import { createPool } from 'mysql2/promise';
 
-export function database(path) {
-  mkdirSync(dirname(path), { recursive: true });
-  const connection = new DatabaseSync(path, { timeout: 5000 });
-  connection.function('fold_text', { deterministic: true }, (text) =>
-    text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase(),
-  );
-  const query = (sql, values = []) => connection.prepare(sql).all(...values);
+export function database(options) {
+  const pool = createPool({
+    ...options,
+    charset: 'utf8mb4_unicode_ci',
+    timezone: 'Z',
+    decimalNumbers: true,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 100,
+    connectTimeout: 10000,
+    multipleStatements: false,
+    typeCast(field, next) {
+      if (field.type === 'DATE') return field.string();
+      if (['DATETIME', 'TIMESTAMP'].includes(field.type)) {
+        const value = field.string();
+        return value ? value.replace(' ', 'T') + 'Z' : null;
+      }
+      return next();
+    },
+  });
 
-  // Keep other requests out of the connection while a transaction awaits its own work.
-  let pending = Promise.resolve();
-  function enqueue(work) {
-    const result = pending.then(work);
-    pending = result.catch(() => {});
-    return result;
+  async function acquire() {
+    const connection = await pool.getConnection();
+    try {
+      await connection.query("SET time_zone = '+00:00'");
+      return connection;
+    } catch (error) {
+      connection.release();
+      throw error;
+    }
   }
 
   return {
-    query: (sql, values) => enqueue(() => query(sql, values)),
-    transaction(work) {
-      return enqueue(async () => {
-        connection.exec('BEGIN IMMEDIATE');
-        try {
-          const result = await work(query, (sql) => connection.exec(sql));
-          connection.exec('COMMIT');
-          return result;
-        } catch (error) {
-          if (connection.isTransaction) connection.exec('ROLLBACK');
-          throw error;
-        }
-      });
+    async query(sql, values = []) {
+      const connection = await acquire();
+      try {
+        const [rows] = await connection.execute(sql, values);
+        return rows;
+      } finally {
+        connection.release();
+      }
     },
-    close: () => enqueue(() => connection.close()),
+    async transaction(work) {
+      const connection = await acquire();
+      try {
+        await connection.beginTransaction();
+        const query = async (sql, values = []) => {
+          const [rows] = await connection.execute(sql, values);
+          return rows;
+        };
+        const result = await work(query);
+        await connection.commit();
+        return result;
+      } catch (error) {
+        try {
+          await connection.rollback();
+        } catch {
+          connection.destroy();
+        }
+        throw error;
+      } finally {
+        connection.release();
+      }
+    },
+    close: () => pool.end(),
   };
 }

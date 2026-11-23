@@ -1,7 +1,8 @@
-export function tripRepository(query) {
+export function tripRepository(query, transactional = false) {
+  const lock = transactional ? ' FOR UPDATE' : '';
   return {
     async findById(id) {
-      const rows = await query('SELECT * FROM trips WHERE id = ?', [id]);
+      const rows = await query('SELECT * FROM trips WHERE id = ?' + lock, [id]);
       return rows[0];
     },
 
@@ -37,14 +38,14 @@ export function tripRepository(query) {
       if (filter.q) {
         const term = '%' + filter.q.replace(/[!%_]/g, (character) => '!' + character) + '%';
         conditions.push(`(
-          fold_text(trips.city) LIKE fold_text(?) ESCAPE '!'
-          OR fold_text(trips.country) LIKE fold_text(?) ESCAPE '!'
-          OR fold_text(users.name) LIKE fold_text(?) ESCAPE '!'
+          trips.city LIKE ? ESCAPE '!'
+          OR trips.country LIKE ? ESCAPE '!'
+          OR users.name LIKE ? ESCAPE '!'
           OR users.handle LIKE ? ESCAPE '!'
           OR EXISTS (
             SELECT 1 FROM trip_stops
             WHERE trip_stops.trip_id = trips.id
-              AND fold_text(trip_stops.name) LIKE fold_text(?) ESCAPE '!'
+              AND trip_stops.name LIKE ? ESCAPE '!'
           )
         )`);
         values.push(term, term, term, term, term);

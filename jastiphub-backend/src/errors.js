@@ -1,10 +1,5 @@
 import { ZodError } from 'zod';
 
-const SQLITE_BUSY = 5;
-const SQLITE_LOCKED = 6;
-const SQLITE_CONSTRAINT_PRIMARYKEY = 1555;
-const SQLITE_CONSTRAINT_UNIQUE = 2067;
-
 export class ApiError extends Error {
   constructor(status, code, message, fields) {
     super(message);
@@ -25,16 +20,13 @@ export function errorHandler(error, req, res, next) {
       Object.values(fields)[0] || 'Periksa data yang diisi.',
       fields,
     );
-  } else if (
-    error.errcode === SQLITE_CONSTRAINT_PRIMARYKEY ||
-    error.errcode === SQLITE_CONSTRAINT_UNIQUE
-  ) {
+  } else if (error.code === 'ER_DUP_ENTRY') {
     error = new ApiError(
       409,
       'CONFLICT',
       'Username atau data ini sudah digunakan. Muat ulang lalu coba lagi.',
     );
-  } else if ([SQLITE_BUSY, SQLITE_LOCKED].includes(error.errcode & 0xff)) {
+  } else if (['ER_LOCK_DEADLOCK', 'ER_LOCK_WAIT_TIMEOUT'].includes(error.code)) {
     error = new ApiError(409, 'CONFLICT', 'Data sedang diperbarui. Silakan coba lagi.');
   } else if (error.code === 'LIMIT_FILE_SIZE' || error.type === 'entity.too.large') {
     error = new ApiError(413, 'TOO_LARGE', 'Ukuran unggahan maksimal 5 MB.');

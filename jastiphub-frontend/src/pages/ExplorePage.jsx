@@ -1,3 +1,4 @@
+import { twMerge } from 'tailwind-merge';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { Art, Icon } from '../components/Art';
@@ -9,17 +10,20 @@ function TripCard({ trip: t }) {
   const p = t.person;
   const on = t.saved;
   return (
-    <article className="trip-card">
-      <div className="card-visual">
+    <article className="overflow-hidden rounded-2xl bg-white [border:1px_solid_#eae5e2]">
+      <div className="aspect-[406.9/128.5] relative [&_>_a]:block [&_>_a]:w-full [&_>_a]:h-full [&_.art]:block [&_.art]:w-full [&_.art]:h-full">
         <Link to={'/trips/' + t.id} aria-label={'Lihat trip ' + t.city}>
           <Art name={t.thumb || t.cover} alt={place(t)} />
         </Link>
-        <span className="location">
+        <span className="absolute top-3 left-[15px] pointer-events-none flex items-center gap-[7px] py-1.5 px-3 rounded-[22px] [background:white] text-[13px] font-[650]">
           <Icon name="pin" size={15} />
           {place(t)}
         </span>
         <button
-          className={'favorite ' + (on ? 'selected' : '')}
+          className={twMerge(
+            "absolute top-[7px] right-[7px] grid place-items-center [background:transparent_url('/art/explore-FavoriteBackground.svg')_center/contain_no-repeat] rounded-[50%] w-9 h-9 [&.selected]:[background-color:var(--color-brand)] [&:hover]:[background-color:var(--color-brand)] " +
+              (on ? 'selected' : ''),
+          )}
           aria-pressed={on}
           aria-label={(on ? 'Hapus simpanan ' : 'Simpan ') + t.city}
           onClick={() => save(t)}
@@ -27,14 +31,19 @@ function TripCard({ trip: t }) {
           <Icon name="heartWhite" size={24} />
         </button>
       </div>
-      <div className="card-body">
+      <div className="relative pt-[7px] px-[17px] pb-1.5 [&_h3]:text-[16px] [&_h3]:leading-[22px] [&_h3]:font-bold [&_h3]:tracking-[-0.25px] mobile:py-2.5! mobile:px-4!">
         <h3>{t.city} Trip</h3>
-        <div className="card-date">
+        <div className="[&_.icon]:mr-[9px] text-[14px] text-muted my-[3px] mx-0">
           <Icon name="smallCal" size={17} />
           {range(t, true)}
         </div>
-        <div className="card-owner">
-          <Art name={p.avatar} className="avatar" />
+        <div className="flex items-center gap-[15px] mt-[3px] mx-0 mb-[9px] [&_small]:flex [&_small]:items-center [&_small]:gap-[5px] [&_small]:text-[11px] [&_small]:text-ink">
+          <Art
+            name={p.avatar}
+            alt={'Foto profil ' + p.name}
+            preserveAspectRatio
+            className="avatar size-[39px] shrink-0 overflow-hidden rounded-full"
+          />
           <div>
             <b>{p.name}</b>
             <small>
@@ -43,23 +52,26 @@ function TripCard({ trip: t }) {
             </small>
           </div>
         </div>
-        <div className="fee-badge">
+        <div className="absolute rounded-xl bg-sage text-brand text-center right-[15px] top-6.5 py-1.5 px-3 [&_small]:block [&_small]:text-[11px] [&_small]:text-deep [&_small]:font-semibold [&_strong]:text-[22px] narrow:right-[9px]!">
           <small>Jastip Fee</small>
           <strong>{fee(t)}</strong>
         </div>
-        <div className="card-stores">
+        <div className="[border-top:1px_solid_var(--color-line)] pt-1.5 px-0 pb-2 [&_small]:text-[11px] [&_small]:text-ink [&_small]:flex [&_small]:items-center [&_small]:gap-[7px]">
           <small>
             <Icon name="store" size={15} />
             Toko yang akan dikunjungi
           </small>
-          <div className="tags">
+          <div className="flex items-center gap-1.5 flex-wrap mt-1 [&_span]:py-[5px] [&_span]:px-2.5 [&_span]:rounded-[24px] [&_span]:[background:#f0f0f4] [&_span]:text-[11px] [&_span]:leading-[1.3] narrow:[&_span]:text-[10px]! mobile:[&_span]:text-[11px]!">
             {t.stores.slice(0, 3).map((s) => (
               <span key={s}>{s}</span>
             ))}
             {t.stores.length > 3 && <span>+{t.stores.length - 3}</span>}
           </div>
         </div>
-        <Button className="card-cta" to={'/trips/' + t.id}>
+        <Button
+          className="w-[calc(100%_+_8px)] ml-[-4px] min-h-[37px] p-[7px]"
+          to={'/trips/' + t.id}
+        >
           Lihat Trip <Icon name="arrow" />
         </Button>
       </div>
@@ -80,54 +92,71 @@ const countryIcons = new Map([
   ['Inggris', 'flags/flag-gb'],
   ['Amerika Serikat', 'flags/flag-us'],
 ]);
-
 function DestinationFilters({ destinations, selected, onSelect }) {
   const rail = useRef(null);
-  const [scroll, setScroll] = useState({ left: false, right: false });
+  const [scroll, setScroll] = useState({
+    left: false,
+    right: false,
+  });
   useEffect(() => {
     const list = rail.current;
     function updateScroll() {
       const left = list.scrollLeft > 1;
       const right = list.scrollLeft + list.clientWidth < list.scrollWidth - 1;
       setScroll((previous) =>
-        previous.left === left && previous.right === right ? previous : { left, right },
+        previous.left === left && previous.right === right
+          ? previous
+          : {
+              left,
+              right,
+            },
       );
     }
     const resize = new ResizeObserver(updateScroll);
     resize.observe(list);
-    list.addEventListener('scroll', updateScroll, { passive: true });
+    list.addEventListener('scroll', updateScroll, {
+      passive: true,
+    });
     updateScroll();
     return () => {
       resize.disconnect();
       list.removeEventListener('scroll', updateScroll);
     };
   }, [destinations.length]);
-
   function move(direction) {
     const list = rail.current;
-    list.scrollBy({ left: direction * list.clientWidth * 0.7 });
+    list.scrollBy({
+      left: direction * list.clientWidth * 0.7,
+    });
   }
-
   return (
-    <div className="destinations">
+    <div className="flex items-center gap-3 justify-between mt-[13px] [&_>_b]:text-[16px] [&_>_b]:whitespace-nowrap narrow:items-start! narrow:flex-col! narrow:gap-2! mobile:[&_>_b]:text-[14px]!">
       <b id="destinations-label">Destinasi Populer</b>
-      <div className="destination-picker">
+      <div className="grid grid-cols-[auto_minmax(0,_1fr)_auto] items-center gap-1 [flex:1] min-w-0 [&_>_button]:grid [&_>_button]:place-items-center [&_>_button]:rounded-full [&_>_button]:border [&_>_button]:border-line [&_>_button]:bg-white [&_>_button]:text-ink [&_>_button]:w-8 [&_>_button]:h-8 [&_>_button:hover:not(:disabled)]:[background:var(--color-sage)] narrow:w-full!">
         <button
           type="button"
-          className="destination-prev"
+          className="[&_.icon]:rotate-[90deg]"
           aria-label="Geser destinasi ke kiri"
           disabled={!scroll.left}
           onClick={() => move(-1)}
         >
           <Icon name="down" size={16} />
         </button>
-        <div ref={rail} className="chips" role="group" aria-labelledby="destinations-label">
+        <div
+          ref={rail}
+          className="flex items-center gap-3 overflow-x-auto [scrollbar-width:none] scroll-smooth p-1 [&::-webkit-scrollbar]:hidden [&_.chip]:flex-none mobile:gap-[7px]!"
+          role="group"
+          aria-labelledby="destinations-label"
+        >
           {['', ...destinations].map((name) => {
             const active = countryKey(name) === countryKey(selected);
             return (
               <button
                 type="button"
-                className={'chip ' + (active ? 'chosen' : '')}
+                className={twMerge(
+                  "chip inline-flex items-center justify-center gap-2 rounded-full border border-line bg-white font-semibold py-[5px] px-[clamp(10px,_1.35vw,_21px)] text-[14px] leading-[20px] whitespace-nowrap min-h-8 [&.chosen]:bg-brand [&.chosen]:text-white [&.chosen]:border-brand [&:hover:not(.chosen)]:[background:#edf6f2] [&_img[src*='/flags/explore-Group']]:rounded-[100%] [&_img[src*='/flags/explore-Group']]:[mask:url('/art/flags/explore-Group.svg')_center/contain_no-repeat] [&_img[src*='/flags/flag-']]:rounded-[100%] [&:not(.chosen)_img[src*='Globe']]:[filter:brightness(0.4)] narrow:[padding-inline:13px]! mobile:text-[12px]! mobile:min-h-[33px]! mobile:py-1.5! mobile:px-[11px]! mobile:[&_.icon]:w-[15px]! " +
+                    (active ? 'chosen' : ''),
+                )}
                 aria-pressed={active}
                 key={name}
                 onClick={() => onSelect(name)}
@@ -140,7 +169,7 @@ function DestinationFilters({ destinations, selected, onSelect }) {
         </div>
         <button
           type="button"
-          className="destination-next"
+          className="[&_.icon]:rotate-[-90deg]"
           aria-label="Geser destinasi ke kanan"
           disabled={!scroll.right}
           onClick={() => move(1)}
@@ -151,7 +180,6 @@ function DestinationFilters({ destinations, selected, onSelect }) {
     </div>
   );
 }
-
 export function ExplorePage() {
   const [params, setParams] = useSearchParams();
   const search = params.get('q') || '';
@@ -184,7 +212,9 @@ export function ExplorePage() {
     page: params.get('page') || '1',
   }))
     if (value) query.set(key, value);
-  const resource = useResource('/trips?' + query, { full: true });
+  const resource = useResource('/trips?' + query, {
+    full: true,
+  });
   const destinationResource = useResource('/destinations');
   const results = resource.data?.data || [];
   const selectedCountry = countryKey(country);
@@ -197,14 +227,17 @@ export function ExplorePage() {
     destinations.set(selectedCountry, country);
   return (
     <main>
-      <section className="hero">
-        <Art name="hero" className="hero-art" />
-        <div className="hero-inner">
-          <span className="eyebrow">
+      <section className="h-78 relative isolate overflow-hidden [background:#deedf8] [&:after]:absolute [&:after]:inset-0 [&:after]:z-[-1] [&:after]:[content:''] [&:after]:[background:linear-gradient(90deg,_#deedf8_0%,_#deedf8_39%,_transparent_65%)] [&_h1]:text-[37px] [&_h1]:leading-[1.22] [&_h1]:mt-4 [&_h1]:mx-0 [&_h1]:mb-[3px] [&_h1]:relative [&_h1]:table [&_h1]:tracking-[-1.4px] [&_h1_.icon]:absolute [&_h1_.icon]:right-[-18px] [&_h1_.icon]:top-[-10px] [&_h1_em]:text-brand [&_h1_em]:not-italic [&_p]:text-[17px] [&_p]:leading-[1.48] [&_p]:font-medium mobile:h-[235px]! mobile:[&:after]:[background:linear-gradient(90deg,_#deedf8_20%,_#deedf8dc_58%,_transparent)]! mobile:[&_h1]:text-[length:clamp(26px,_6.5vw,_35px)]! mobile:[&_h1]:mt-3.5! mobile:[&_h1]:mx-0! mobile:[&_h1]:mb-1.5! mobile:[&_h1]:tracking-[-1px]! mobile:[&_h1_.icon]:w-[27px]! mobile:[&_h1_.icon]:right-[-15px]! mobile:[&_p]:text-[13px]! mobile:[&_p]:max-w-[65%]! mobile:[&_.art]:min-w-0!">
+        <Art
+          name="hero"
+          className="absolute inset-0 z-[-1] wide:[&_img]:[object-fit:cover]! mobile:[inset:0_-50%_0_-28%]!"
+        />
+        <div className="w-[min(83.4%,_1168px)] m-auto pt-[29px] mobile:w-[90%]! mobile:pt-5.5!">
+          <span className="inline-flex items-center gap-2 rounded-full text-deep font-semibold [background:#d6eee7] text-[12px] py-[9px] px-4.5 mobile:text-[10px]! mobile:py-1.5! mobile:px-[11px]!">
             <Icon name="plane" size={17} />
             Jastip Otentik, Dari Perjalanan Nyata
           </span>
-          <h1>
+          <h1 className="mobile:text-[30px]!">
             Titip Belanja Mudah
             <Icon name="accent" size={43} />
             <br />
@@ -212,20 +245,23 @@ export function ExplorePage() {
           </h1>
           <p>
             Temukan trip terpercaya, titip barang dari toko
-            <br className="desktop-break" /> favorit, dan belanja dengan tenang.
+            <br className="mobile:hidden!" /> favorit, dan belanja dengan tenang.
           </p>
         </div>
       </section>
-      <div className="explore-shell">
+      <div className="w-[min(88.6%,_1240px)] [margin-inline:auto] max-w-312.5 pb-7 tablet:w-[92%]!">
         <form
-          className="searchbar"
+          className="flex gap-3 bg-white relative mt-[-28px] mx-auto mb-[13px] max-w-302.5 w-[97%] py-2 px-[13px] rounded-[20px] [box-shadow:0_4px_13px_#1923310e] [&_>_.btn]:w-[18%] [&_>_.btn]:min-h-10 [&_>_.btn]:text-[14px] [&_>_.btn_.icon]:w-5 mobile:w-full! mobile:mt-[-24px]! mobile:flex-wrap! mobile:gap-[7px]! mobile:p-[9px]! mobile:rounded-[15px]! mobile:[&_>_.btn]:w-full! mobile:[&_>_.btn]:h-[37px]! mobile:[&_>_.btn]:min-h-[37px]! mobile:[&_>_.btn]:text-[14px]! mobile:[&_>_.btn_img]:w-4.5!"
           onSubmit={(e) => {
             e.preventDefault();
-            update({ q, date });
+            update({
+              q,
+              date,
+            });
           }}
         >
-          <div className="search-inputs">
-            <label className="search-text">
+          <div className="flex flex-1 min-w-0 items-center [background:#f9f9fc] [border:1px_solid_#d2d6e3] rounded-[12px] mobile:basis-full! mobile:h-11.5!">
+            <label className="flex items-center gap-4.5 pl-[19px] [flex:1] [&_input]:py-[7px] [&_input]:px-0 [&_input]:[background:none] [&_input]:[border:0] [&_input]:[flex:1] [&_input]:min-w-10 [&_input]:text-[16px] [&_input]:leading-[24px] mobile:gap-[7px]! mobile:pl-2! mobile:[&_.icon]:w-[17px]! mobile:[&_input]:text-[12px]! mobile:[&_input]:w-full!">
               <Icon name="search" size={24} />
               <input
                 aria-label="Cari destinasi, toko, atau jastiper"
@@ -234,7 +270,7 @@ export function ExplorePage() {
                 onChange={(e) => setQ(e.target.value)}
               />
             </label>
-            <label className="search-date">
+            <label className="flex items-center gap-4.5 [border-left:1px_solid_#cfd2dd] [flex:0_1_36%] pt-0 pr-4.5 pb-0 pl-[27px] relative h-8 text-muted [&_span]:grid [&_span]:gap-[1px] [&_small]:text-[11px] [&_small]:leading-[1.25] [&_b]:text-[14px] [&_b]:leading-[1.25] [&_b]:font-medium [&_.icon:last-of-type]:ml-auto [&_input]:absolute [&_input]:inset-0 [&_input]:opacity-[0] [&_input]:w-full [&_input]:p-0 [&:focus-within]:[outline:2px_solid_var(--color-brand)] mobile:[flex:0_0_35%]! mobile:[padding-inline:8px]! mobile:gap-[5px]! mobile:[&_.icon]:w-[15px]! mobile:[&_.icon:last-of-type]:hidden! mobile:[&_b]:text-[11px]! mobile:[&_small]:text-[9px]!">
               <Icon name="date" size={25} />
               <span>
                 <small>Tanggal trip</small>
@@ -265,16 +301,27 @@ export function ExplorePage() {
         <DestinationFilters
           destinations={[...destinations.values()]}
           selected={country}
-          onSelect={(name) => update({ country: name })}
+          onSelect={(name) =>
+            update({
+              country: name,
+            })
+          }
         />
-        <div className="list-heading">
+        <div className="flex justify-between items-center gap-4 mt-4 mx-0 mb-2 [&_h2]:text-[25px] [&_p]:text-[13px] [&_label]:flex [&_label]:items-center [&_label]:gap-4 [&_label]:text-[12px] [&_label]:text-muted [&_select]:rounded-[8px] [&_select]:py-[9px] [&_select]:px-3 [&_select]:text-[13px] [&_select]:min-w-41 [&_select]:font-[650] mobile:items-start! mobile:flex-col! mobile:gap-2! mobile:[&_h2]:text-[24px]! mobile:[&_p]:text-[12px]! mobile:[&_label]:self-end! mobile:[&_label]:gap-2! mobile:[&_select]:text-[12px]! mobile:[&_select]:py-[5px]! mobile:[&_select]:px-[9px]! mobile:[&_select]:min-w-0!">
           <div>
-            <h2>Trip Mendatang</h2>
+            <h2 className="mobile:text-[22px]!">Trip Mendatang</h2>
             <p>Jelajahi trip dari jastiper yang akan segera mengunjungi toko favoritmu.</p>
           </div>
           <label>
             Urutkan{' '}
-            <select value={sort} onChange={(e) => update({ sort: e.target.value })}>
+            <select
+              value={sort}
+              onChange={(e) =>
+                update({
+                  sort: e.target.value,
+                })
+              }
+            >
               <option value="soon">Segera Berangkat</option>
               <option value="latest">Terakhir Berangkat</option>
               <option value="rating">Rating Tertinggi</option>
@@ -283,7 +330,7 @@ export function ExplorePage() {
         </div>
         {(search || day || country) && (
           <button
-            className="text-btn mb-3"
+            className="inline-flex items-center gap-2 text-brand font-bold text-left text-[13px] [&:hover]:[text-decoration:underline] mb-3"
             onClick={() => {
               setParams({});
               setQ('');
@@ -298,14 +345,18 @@ export function ExplorePage() {
           !resource.error &&
           (results.length ? (
             <>
-              <div className="trip-grid">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[19px] mobile:gap-4!">
                 {results.map((t) => (
                   <TripCard key={t.id} trip={t} />
                 ))}
               </div>
               <Pagination
                 meta={resource.data?.meta}
-                onPage={(page) => update({ page: String(page) })}
+                onPage={(page) =>
+                  update({
+                    page: String(page),
+                  })
+                }
               />
             </>
           ) : (

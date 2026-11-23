@@ -3,8 +3,10 @@ import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 
-const viteConfig = fileURLToPath(new URL('../../vite.config.js', import.meta.url));
-const buildDirectory = new URL('../../assets/', import.meta.url);
+const viteConfig = fileURLToPath(
+  new URL('../../jastiphub-frontend/vite.config.js', import.meta.url),
+);
+const buildDirectory = new URL('../../jastiphub-frontend/dist/', import.meta.url);
 const index = fileURLToPath(new URL('index.html', buildDirectory));
 
 export async function mountFrontend(app, server, dev) {

@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
-import { writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { ApiError, missing } from './errors.js';
 import { equal, token } from './security.js';
 
@@ -9,8 +9,9 @@ const duration = 30 * 60 * 1000;
 const cookieOptions = { httpOnly: true, sameSite: 'strict', path: '/api/v1/auth' };
 
 export async function writeLocalResetLauncher(config) {
-  // The launcher stays next to SQLite, outside the frontend's public directory.
-  const file = join(dirname(config.databasePath), '.jastiphub-local.html');
+  // Keep local access tokens outside the frontend's public directory.
+  await mkdir(config.runtimeDir, { recursive: true });
+  const file = join(config.runtimeDir, '.jastiphub-local.html');
   const url = `${config.origin}/login#local-reset=${config.localResetKey}`;
   const html = `<!doctype html>
 <meta charset="utf-8">

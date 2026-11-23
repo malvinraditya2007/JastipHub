@@ -4,24 +4,15 @@ import { normalizePhone } from './utils/phone.js';
 const text = (max, label) =>
   z.string().trim().min(1, `${label} wajib diisi.`).max(max, `${label} maksimal ${max} karakter.`);
 export const id = z.string().regex(/^[a-zA-Z0-9-]{1,36}$/, 'ID tidak valid.');
-export const handle = z
-  .string()
-  .trim()
-  .transform((s) => s.replace(/^@/, '').toLowerCase())
-  .pipe(
-    z.string().regex(/^[a-z0-9_]{3,30}$/, 'Username harus 3–30 huruf, angka, atau underscore.'),
-  );
-export const password = z
-  .string()
-  .min(8, 'Password minimal 8 karakter.')
-  .max(128, 'Password maksimal 128 karakter.');
+export const handle = z.string().trim().min(1, 'Username wajib diisi.');
+export const password = z.string().min(1, 'Password wajib diisi.');
 const phone = z
   .string()
   .max(30)
   .transform(normalizePhone)
   .pipe(z.string().regex(/^\d{8,15}$/, 'Nomor WhatsApp harus 8–15 digit.'));
 export const registration = z.object({ name: text(100, 'Nama'), handle, password, phone }).strict();
-export const login = z.object({ handle, password: z.string().min(1).max(128) }).strict();
+export const login = z.object({ handle, password }).strict();
 export const profile = z
   .object({
     name: text(100, 'Nama'),

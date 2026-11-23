@@ -1,11 +1,11 @@
+import { twMerge } from 'tailwind-merge';
 import { defaultCoverAssets } from '../data';
-
 const sprite = 'explore-AvatarAldo';
 const picture = {
   logo: ['explore-JastipHubImportedAirplaneLogo', 165.03, 148.21, -33.21, -19.78],
   hero: ['explore-HeroPhotoImportedBackgroundOnly', 100, 149.07, 0, -7.22],
   aldo: [sprite, 3520.93, 2416.28, -3174.42, -30.23],
-  owen: [sprite, 3440.91, 2416.28, -236.36, -1902.33],
+  owen: [sprite, 3440.91, 2361.36, -243.18, -1854.55],
   nadia: [sprite, 3440.91, 2416.28, -1290.91, -1897.67],
   kevin: [sprite, 3364.44, 2416.28, -2260, -1897.67],
   tokyoCard: [sprite, 345.66, 1194.25, -19.18, -762.07],
@@ -36,31 +36,51 @@ export function Art({ name, className = '', alt = '', preserveAspectRatio = fals
       name.startsWith('blob:'));
   if (!landmark && !source && !uploaded)
     return (
-      <span aria-hidden="true" className={'initial ' + className}>
+      <span
+        aria-hidden="true"
+        className={twMerge(
+          'inline-grid place-items-center bg-sage text-brand font-bold ' + className,
+        )}
+      >
         J
       </span>
     );
   const [file, width = 100, height = 100, left = 0, top = 0] = source || [];
   const src = landmark ? '/art/covers/' + name : file ? '/art/' + file + '.png' : name;
-  const imageStyle = { width: width + '%', height: height + '%', left: left + '%', top: top + '%' };
+  const imageStyle = {
+    '--art-width': width + '%',
+    '--art-height': height + '%',
+    '--art-left': left + '%',
+    '--art-top': top + '%',
+  };
   const cropRatio = preserveAspectRatio && (imageRatios[file] * height) / width;
-
   return (
-    <span className={'art ' + className}>
+    <span className={twMerge('art block relative overflow-hidden isolate', className)}>
       {cropRatio ? (
-        <span className="art-frame">
-          <span className="art-crop" style={{ '--crop-ratio': cropRatio }}>
-            <img alt={alt} src={src} style={imageStyle} />
+        <span className="absolute inset-0 [container-type:size]">
+          <span
+            className="absolute top-[50%] left-[50%] w-[max(100cqw,_calc(100cqh_*_var(--crop-ratio)))] aspect-[var(--crop-ratio)] [translate:-50%_-50%] overflow-hidden"
+            style={{
+              '--crop-ratio': cropRatio,
+            }}
+          >
+            <img
+              alt={alt}
+              src={src}
+              className="absolute block max-w-none w-[var(--art-width)] h-[var(--art-height)] left-[var(--art-left)] top-[var(--art-top)]"
+              style={imageStyle}
+            />
           </span>
         </span>
       ) : (
         <img
           alt={alt}
           src={src}
-          style={{
-            ...imageStyle,
-            objectFit: landmark || preserveAspectRatio || !source ? 'cover' : 'fill',
-          }}
+          className={twMerge(
+            'absolute block max-w-none w-[var(--art-width)] h-[var(--art-height)] left-[var(--art-left)] top-[var(--art-top)]',
+            landmark || preserveAspectRatio || !source ? 'object-cover' : 'object-fill',
+          )}
+          style={imageStyle}
         />
       )}
     </span>
@@ -105,7 +125,7 @@ export function Icon({ name, size = 18, className = '' }) {
     <img
       alt=""
       aria-hidden="true"
-      className={'icon ' + className}
+      className={twMerge('icon inline-block flex-none align-middle object-contain ' + className)}
       width={size}
       height={size}
       src={'/art/' + (icons[name] || name) + '.svg'}

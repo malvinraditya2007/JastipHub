@@ -1,4 +1,4 @@
-import { ApiError, missing } from '../errors.js';
+import { missing } from '../errors.js';
 import { assertOwnedMedia } from './media-service.js';
 
 export function publicUser(user) {
@@ -29,9 +29,6 @@ export function createUserService(repositories) {
       await repositories.transaction(async (transaction) => {
         const existing = await transaction.users.findById(userId);
         if (!existing) throw missing();
-        if (existing.is_demo && profile.handle !== existing.handle) {
-          throw new ApiError(422, 'DEMO_HANDLE', 'Username akun demo tetap aldojastip.');
-        }
         await assertOwnedMedia(transaction, profile.avatar, userId, 'avatar', existing.avatar);
         await transaction.users.updateProfile(userId, profile);
       });

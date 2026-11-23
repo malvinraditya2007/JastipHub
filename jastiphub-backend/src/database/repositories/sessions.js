@@ -1,4 +1,4 @@
-const now = "strftime('%Y-%m-%dT%H:%M:%fZ', 'now')";
+const now = 'UTC_TIMESTAMP(3)';
 
 export function sessionRepository(query) {
   return {
@@ -16,7 +16,7 @@ export function sessionRepository(query) {
       return query(
         `INSERT INTO sessions (token_hash, user_id, csrf_token, expires_at)
          VALUES (?, ?, ?, ?)`,
-        [session.tokenHash, session.userId, session.csrfToken, session.expiresAt.toISOString()],
+        [session.tokenHash, session.userId, session.csrfToken, session.expiresAt],
       );
     },
 

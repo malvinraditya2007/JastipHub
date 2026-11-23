@@ -5,7 +5,6 @@ import { RecoveryDialog } from '../components/RecoveryDialog';
 import { Button, Field, Loading, RequestError } from '../components/UI';
 import { request } from '../services/api';
 import { useApp } from '../services/store';
-
 export function ResetPasswordPage() {
   const {
     boot,
@@ -20,18 +19,22 @@ export function ResetPasswordPage() {
   const [busy, setBusy] = useState(false);
   const [recovery, setRecovery] = useState('');
   const needsLocalLauncher = localPasswordReset && !localResetReady;
-
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setError('');
     const values = Object.fromEntries(new FormData(e.currentTarget));
     try {
-      const result = await request('/auth/reset-password', { method: 'POST', body: values });
+      const result = await request('/auth/reset-password', {
+        method: 'POST',
+        body: values,
+      });
       await boot();
       if (localPasswordReset) {
         setMessage(result.message);
-        nav('/login', { replace: true });
+        nav('/login', {
+          replace: true,
+        });
       } else {
         setRecovery(result.recoveryCode);
       }
@@ -43,10 +46,10 @@ export function ResetPasswordPage() {
     }
   }
   return (
-    <main className="page reset-page">
+    <main className="w-[min(88.6%,_1240px)] [margin-inline:auto] pt-[49px] pb-14.5 tablet:w-[92%]! mobile:pt-7! max-w-190">
       <Brand />
-      <div className="panel reset-panel">
-        <h1>Atur ulang password</h1>
+      <div className="rounded-2xl border border-line bg-white overflow-hidden p-7.5 mt-7.5 [&_form]:grid [&_form]:gap-5 [&_form]:mt-[25px]">
+        <h1 className="mobile:text-[30px]!">Atur ulang password</h1>
         {!ready ? (
           <Loading />
         ) : bootError ? (
@@ -54,17 +57,19 @@ export function ResetPasswordPage() {
         ) : (
           <>
             {needsLocalLauncher && (
-              <p className="sub">
+              <p className="sub text-[14px] mt-2 mobile:text-[13px]!">
                 Buka aplikasi dari <code>jastiphub-backend/.data/.jastiphub-local.html</code> untuk
                 mereset akun lokal.
               </p>
             )}
             {!localPasswordReset && (
-              <p className="sub">Gunakan kode pemulihan yang kamu simpan saat daftar.</p>
+              <p className="sub text-[14px] mt-2 mobile:text-[13px]!">
+                Gunakan kode pemulihan yang kamu simpan saat daftar.
+              </p>
             )}
             <form onSubmit={submit}>
               <Field label="Username">
-                <input name="handle" required autoComplete="username" maxLength="30" />
+                <input name="handle" required autoComplete="username" />
               </Field>
               {!localPasswordReset && (
                 <Field label="Kode pemulihan">
@@ -78,21 +83,17 @@ export function ResetPasswordPage() {
                 </Field>
               )}
               <Field label="Password baru">
-                <input
-                  name="password"
-                  required
-                  type="password"
-                  minLength={localPasswordReset ? undefined : 8}
-                  maxLength="128"
-                  autoComplete="new-password"
-                />
+                <input name="password" required type="password" autoComplete="new-password" />
               </Field>
               {error && (
-                <p className="error" role="alert">
+                <p
+                  className="text-[#9b2e26] [background:#fff1ef] py-2.5 px-3 rounded-[8px] text-[14px] my-3 mx-0"
+                  role="alert"
+                >
                   {error}
                 </p>
               )}
-              <div className="actions">
+              <div className="actions flex flex-wrap items-center justify-end gap-3 mt-7 mobile:gap-2!">
                 <Button kind="light" to="/login">
                   Kembali ke Login
                 </Button>
@@ -105,7 +106,14 @@ export function ResetPasswordPage() {
         )}
       </div>
       {recovery && (
-        <RecoveryDialog code={recovery} onContinue={() => nav('/login', { replace: true })} />
+        <RecoveryDialog
+          code={recovery}
+          onContinue={() =>
+            nav('/login', {
+              replace: true,
+            })
+          }
+        />
       )}
     </main>
   );
