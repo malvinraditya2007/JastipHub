@@ -24,7 +24,7 @@ Buka <http://127.0.0.1:5173>. Endpoint health tersedia di `/api/v1/health`.
 
 Jika PowerShell memblokir `npm.ps1`, gunakan `npm.cmd` sebagai pengganti `npm`.
 
-`src/database/init.js` pada backend menyiapkan tabel MySQL/TiDB dan mencatat migration yang sudah diterapkan. Backend juga memanggil inisialisasi ini saat mulai. Akun dan trip tersimpan di server database; gambar upload tersimpan di `jastiphub-backend/storage/uploads/` dan diabaikan Git. Data demo hanya disiapkan jika `ENABLE_DEMO=true` saat development.
+`src/database/init.js` pada backend menyiapkan tabel MySQL/TiDB dan mencatat migration yang sudah diterapkan. Backend juga memanggil inisialisasi ini saat mulai. Akun dan trip tersimpan di server database. Isi `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, dan `CLOUDINARY_API_SECRET` di `.env` backend untuk menyimpan upload avatar/cover ke Cloudinary. Jika ketiganya kosong, gambar disimpan di `jastiphub-backend/storage/uploads/`. File `.env` dan penyimpanan lokal diabaikan Git. Data demo hanya disiapkan jika `ENABLE_DEMO=true` saat development.
 
 Untuk development dengan database MySQL lokal, pembuka reset password berada di `jastiphub-backend/storage/.jastiphub-local.html`. Fitur reset lokal ini tidak aktif untuk database cloud; gunakan kode pemulihan akun dari alur daftar.
 

@@ -20,6 +20,12 @@ export const profile = z
     phone,
     city: z.string().trim().max(100).default(''),
     avatar: z.string().max(255).default(''),
+    avatarColor: z
+      .string()
+      .regex(/^#[0-9a-f]{6}$/i, 'Pilih warna inisial yang valid.')
+      .transform((value) => value.toLowerCase())
+      .nullable()
+      .optional(),
   })
   .strict();
 export const date = z

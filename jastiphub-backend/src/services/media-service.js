@@ -1,19 +1,21 @@
 import sharp from 'sharp';
 import { randomUUID } from 'node:crypto';
-import { writeFile, unlink } from 'node:fs/promises';
-import { join } from 'node:path';
 import { ApiError } from '../errors.js';
+import { createMediaStorage } from './media-storage.js';
 
 export async function assertOwnedMedia(repositories, url, userId, purpose, previous = null) {
   if (!url || url === previous) return;
-  const filename = url.replace(/^\/uploads\//, '');
-  const media = await repositories.media.findOwned(filename, userId, purpose);
-  if (!url.startsWith('/uploads/') || !media) {
+  const local = url.startsWith('/uploads/');
+  const cloud = url.startsWith('https://res.cloudinary.com/');
+  const filename = local ? url.slice('/uploads/'.length) : url;
+  const media = (local || cloud) && (await repositories.media.findOwned(filename, userId, purpose));
+  if (!media) {
     throw new ApiError(422, 'INVALID_MEDIA', 'Foto tidak tersedia atau bukan milik akunmu.');
   }
 }
 
 export function createMediaService(repositories, config) {
+  const storage = createMediaStorage(config);
   return {
     async upload(userId, file, purpose) {
       if (
@@ -56,22 +58,20 @@ export function createMediaService(repositories, config) {
       }
 
       const id = randomUUID();
-      const filename = id + '.webp';
-      const filePath = join(config.uploadDir, filename);
-      await writeFile(filePath, output, { flag: 'wx' });
+      const stored = await storage.save(output, id, purpose);
       try {
         await repositories.media.create({
           id,
           ownerId: userId,
           purpose,
-          filename,
+          filename: stored.filename,
           size: output.length,
         });
       } catch (error) {
-        await unlink(filePath).catch(() => {});
+        await stored.remove().catch(() => {});
         throw error;
       }
-      return { id, url: '/uploads/' + filename, purpose };
+      return { id, url: stored.url, purpose };
     },
   };
 }

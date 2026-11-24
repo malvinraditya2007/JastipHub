@@ -80,7 +80,7 @@ export function reviewRepository(query) {
       const offset = (pagination.page - 1) * pagination.pageSize;
       const rows = await query(
         `SELECT reviews.id, reviews.trip_id, reviews.rating, reviews.text, reviews.created_at,
-                users.id AS author_id, users.name, users.avatar, trips.city
+                users.id AS author_id, users.name, users.avatar, users.avatar_color, trips.city
          FROM reviews JOIN trips ON trips.id = reviews.trip_id
          JOIN users ON users.id = reviews.author_id
          WHERE trips.owner_id = ? ORDER BY reviews.created_at DESC, reviews.id

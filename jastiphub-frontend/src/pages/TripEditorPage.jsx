@@ -460,11 +460,11 @@ function EditorForm({ existing }) {
                 Ganti Foto
               </Button>
             </div>
-            <div className="[&_p_.icon]:mr-[9px] pt-[55px] px-5.5 pb-5.5 [&_p]:text-[13px] [&_p]:mt-[11px] [&_.fee-line_strong]:text-[27px] [&_.tag]:mt-[21px] [&_.tag]:mx-0 [&_.tag]:mb-8.5 tablet:py-[25px]! tablet:px-[15px]!">
+            <div className="pt-[55px] px-5.5 pb-5.5 [&_p]:text-[13px] [&_p]:mt-[11px] [&_.fee-line_strong]:text-[27px] [&_.tag]:mt-[21px] [&_.tag]:mx-0 [&_.tag]:mb-8.5 tablet:py-[25px]! tablet:px-[15px]!">
               <h2 className="mobile:text-[22px]!">
                 {t.city || t.country ? place(t) : 'Tujuan perjalanan'}
               </h2>
-              <p>
+              <p className="flex items-center gap-[9px]">
                 <Icon name="calendar" />
                 {range(t, true)}
               </p>

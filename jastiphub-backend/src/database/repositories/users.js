@@ -62,7 +62,7 @@ export function userRepository(query, transactional = false) {
 
     updateProfile(id, profile) {
       return query(
-        `UPDATE users SET name = ?, handle = ?, handle_key = ?, phone = ?, city = ?, avatar = ?,
+        `UPDATE users SET name = ?, handle = ?, handle_key = ?, phone = ?, city = ?, avatar = ?, avatar_color = ?,
          updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
         [
           profile.name,
@@ -71,6 +71,7 @@ export function userRepository(query, transactional = false) {
           profile.phone,
           profile.city,
           profile.avatar,
+          profile.avatarColor,
           id,
         ],
       );

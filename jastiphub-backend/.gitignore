@@ -4,3 +4,9 @@ dist/
 .env.*
 !.env.example
 storage/
+.envrc
+.cloudinary*
+!.cloudinary.example
+*.pem
+*.key
+*.log

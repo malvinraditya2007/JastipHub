@@ -23,7 +23,7 @@ export async function createApp(database, config) {
       contentSecurityPolicy: config.production
         ? {
             directives: {
-              'img-src': ["'self'", 'data:', 'blob:'],
+              'img-src': ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com'],
               'style-src': ["'self'", "'unsafe-inline'"],
               'upgrade-insecure-requests': [],
             },

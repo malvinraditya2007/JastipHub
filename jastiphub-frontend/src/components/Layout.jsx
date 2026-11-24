@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useApp } from '../services/store';
 import { Art, Icon } from './Art';
+import { Avatar } from './Avatar';
 import { Button, Dialog } from './UI';
 export function Brand() {
   return (
@@ -89,14 +90,16 @@ export function Layout() {
               className="profile-link [&:hover]:[background:#f2f8f5] inline-flex items-center gap-2 rounded-lg font-semibold whitespace-nowrap text-[14px] mobile:text-[12px]! mobile:[&_.avatar]:w-7.5! mobile:[&_.avatar]:h-7.5!"
             >
               {user ? (
-                <Art
-                  name={user.avatar}
+                <Avatar
+                  src={user.avatar}
+                  name={user.name}
+                  color={user.avatarColor}
                   className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18!"
                 />
               ) : (
                 <Icon name="bag" />
               )}
-              {user ? 'Profil' : 'Masuk'}
+              {user ? user.name : 'Masuk'}
             </NavLink>
           </div>
         </div>

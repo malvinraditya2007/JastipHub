@@ -30,6 +30,17 @@ export function configuration(env = process.env) {
   if (cookieSameSite === 'none' && !production) {
     throw new Error('COOKIE_SAME_SITE=none memerlukan HTTPS dan NODE_ENV=production.');
   }
+  const cloudinary = {
+    cloud_name: env.CLOUDINARY_CLOUD_NAME?.trim(),
+    api_key: env.CLOUDINARY_API_KEY?.trim(),
+    api_secret: env.CLOUDINARY_API_SECRET?.trim(),
+  };
+  const cloudinaryValues = Object.values(cloudinary);
+  if (cloudinaryValues.some(Boolean) && !cloudinaryValues.every(Boolean)) {
+    throw new Error(
+      'Lengkapi CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, dan CLOUDINARY_API_SECRET di .env.',
+    );
+  }
   return {
     production,
     port,
@@ -41,6 +52,7 @@ export function configuration(env = process.env) {
     trustProxy: Number(env.TRUST_PROXY || 0),
     uploadDir: resolve(projectRoot, env.UPLOAD_DIR || 'storage/uploads'),
     runtimeDir: resolve(projectRoot, 'storage'),
+    cloudinary: cloudinaryValues.every(Boolean) ? cloudinary : null,
     database: {
       host: databaseHost,
       port: databasePort,

@@ -1,5 +1,6 @@
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Art, Icon } from '../components/Art';
+import { Avatar } from '../components/Avatar';
 import { WhatsApp } from '../components/TripDialogs';
 import { Button, ResourceState, useSave } from '../components/UI';
 import { fee, place, range } from '../data';
@@ -67,8 +68,10 @@ export function TripDetailPage() {
           </div>
           <hr />
           <div className="inline-person flex items-center gap-3 [&_small]:flex [&_small]:items-center [&_small]:gap-[5px]">
-            <Art
-              name={p.avatar}
+            <Avatar
+              src={p.avatar}
+              name={p.name}
+              color={p.avatarColor}
               className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18!"
             />
             <div>

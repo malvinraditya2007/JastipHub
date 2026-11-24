@@ -14,7 +14,7 @@ npm run dev
 
 Aplikasi tersedia di <http://127.0.0.1:5173>. Health endpoint: `GET /api/v1/health`.
 
-Saat mulai, backend menyiapkan tabel MySQL/TiDB melalui `src/database/init.js`. Akun, trip, sesi, dan ulasan tersimpan di server database. File upload tersimpan di `storage/uploads/`; folder `storage` tidak ikut Git.
+Saat mulai, backend menyiapkan tabel MySQL/TiDB melalui `src/database/init.js`. Akun, trip, sesi, dan ulasan tersimpan di server database. Upload avatar dan cover memakai Cloudinary jika kredensialnya diisi; tanpa kredensial, file disimpan di `storage/uploads/`. Folder `storage` tidak ikut Git.
 
 ## Struktur
 
@@ -53,12 +53,28 @@ Salin `.env.example` ke `.env` di folder `jastiphub-backend/`. Perintah npm dari
 
 Inisialisasi mencatat checksum migration. Tambahkan migration baru untuk perubahan tabel setelah migration sebelumnya diterapkan. DDL MySQL/TiDB tidak dibungkus transaksi; migration awal memakai `CREATE TABLE IF NOT EXISTS` agar dapat dilanjutkan setelah kegagalan. Jalankan inisialisasi dari satu proses sebelum menambah instance aplikasi.
 
+## Upload Cloudinary
+
+Isi ketiga variabel berikut di `.env` backend dari Cloudinary Console → Settings → API Keys:
+
+```dotenv
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+Restart server setelah mengubah `.env`. Ketiganya harus lengkap; konfigurasi parsial menghentikan startup. Jika semuanya kosong, backend menggunakan penyimpanan lokal. Kredensial hanya dipakai SDK backend, tanpa upload preset atau variabel `VITE_`.
+
+Endpoint `POST /api/v1/uploads` tetap menerima `file` dan `purpose` (`avatar` atau `cover`) melalui multipart dengan login dan CSRF. Gambar maksimal 5 MB, diperiksa serta dikonversi ke WebP sebelum dikirim ke Cloudinary dengan public ID `jastiphub/<purpose>/<uuid>`. Respons berisi URL HTTPS yang dipakai langsung oleh frontend. Metadata dan URL disimpan di TiDB; kolom `media.filename` menyimpan URL Cloudinary lengkap atau nama file lokal untuk upload lama. URL avatar/cover hanya bisa dipasang oleh pemilik upload dengan purpose yang sesuai. Jika penyimpanan metadata gagal, backend mencoba menghapus aset yang baru diunggah.
+
+Foto lokal yang sudah ada tetap tersedia lewat `/uploads/`; tidak dimigrasikan otomatis. Kegagalan Cloudinary tidak dialihkan diam-diam ke penyimpanan lokal. `.env`, konfigurasi lokal `.cloudinary*`, private key, dan log diabaikan Git; `.env.example` tetap berisi placeholder.
+
 ## Frontend, cookie, dan deployment
 
 - Jalankan `npm run build` sebelum `npm start`. Express menyajikan halaman, API, dan upload dari satu origin.
 - Dalam production gunakan `NODE_ENV=production` dan isi `APP_ORIGIN` dengan alamat HTTPS publik aplikasi.
 - Cookie memakai `COOKIE_SAME_SITE=lax` secara default. Mutasi API diperiksa dengan origin aplikasi dan header CSRF.
-- Saat deployment, gunakan database MySQL/TiDB persistent dan simpan folder `UPLOAD_DIR` di volume persistent agar gambar tetap ada setelah restart.
+- Saat deployment, gunakan database MySQL/TiDB persistent. Jika memakai upload lokal atau masih memiliki foto lokal lama, simpan folder `UPLOAD_DIR` di volume persistent. Upload Cloudinary tidak membutuhkan volume gambar lokal.
 - Sesuaikan `HOST`, `PORT`, dan `TRUST_PROXY` dengan hosting. Demo login selalu nonaktif pada production.
 
 ## Perintah
@@ -76,4 +92,8 @@ Inisialisasi mencatat checksum migration. Tambahkan migration baru untuk perubah
 
 Username dan password wajib diisi, tanpa syarat format atau panjang minimum selain tidak kosong. Username dapat berisi spasi, simbol, atau Unicode; penulisan disimpan, pencarian akun tidak membedakan huruf besar/kecil, dan username harus unik. Migration `002_flexible_usernames.js` menyesuaikan penyimpanan username yang sebelumnya terbatas 30 karakter.
 
-Login menggunakan username/password, pemulihan memakai kode pemulihan, tanpa email. Laporan tersimpan dengan status `received`; belum ada dashboard moderator. Upload memakai filesystem persistent dan rate limiter memakai memori satu instance. Belum ada pembayaran atau verifikasi transaksi WhatsApp.
+Foto profil opsional. Tanpa foto (atau jika gambar gagal dimuat), frontend menampilkan satu huruf pertama nama. Warna dapat dipilih di edit profil dan disimpan melalui `avatarColor`; pilih **Otomatis** untuk memakai warna konsisten dari nama. `avatarColor: null` mengembalikan mode otomatis, sedangkan field yang tidak dikirim mempertahankan pilihan sebelumnya. Pilih **Gunakan inisial** untuk menghapus foto dari profil. Cover trip tanpa upload memakai gambar destinasi otomatis.
+
+Seed development berisi 7 akun demo dan 8 trip (termasuk satu perjalanan yang sudah selesai). Semua akun demo baru memakai avatar inisial. Seed juga mengganti avatar AI bawaan pada akun demo lama dengan inisial, sambil mempertahankan foto yang sudah diupload pengguna. Jalankan `npm run db:seed` dengan `ENABLE_DEMO=true`; perintah dapat diulang tanpa menggandakan data. Login contoh tersedia lewat tombol demo tanpa password bersama.
+
+Login menggunakan username/password, pemulihan memakai kode pemulihan, tanpa email. Laporan tersimpan dengan status `received`; belum ada dashboard moderator. Upload memakai Cloudinary atau filesystem sesuai konfigurasi; rate limiter memakai memori satu instance. Belum ada pembayaran atau verifikasi transaksi WhatsApp.

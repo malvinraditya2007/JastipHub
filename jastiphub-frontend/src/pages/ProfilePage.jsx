@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router';
 import { useApp, useResource } from '../services/store';
 import { maskPhone, range } from '../data';
 import { validateImage } from '../images';
-import { Art, Icon } from '../components/Art';
+import { Icon } from '../components/Art';
+import { Avatar } from '../components/Avatar';
+import { avatarColors } from '../utils/avatar';
 import { Head, Field, Button, Dialog, Empty, ResourceState } from '../components/UI';
 function EditProfile({ close }) {
   const { user, updateProfile, upload, setMessage } = useApp();
   const [avatar, setAvatar] = useState(user.avatar);
+  const [avatarColor, setAvatarColor] = useState(user.avatarColor || null);
+  const [displayName, setDisplayName] = useState(user.name);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   async function save(e) {
@@ -19,6 +23,7 @@ function EditProfile({ close }) {
       await updateProfile({
         ...values,
         avatar,
+        avatarColor,
       });
       close();
       setMessage('Perubahan profil tersimpan.');
@@ -53,8 +58,10 @@ function EditProfile({ close }) {
           disabled={busy}
         >
           <div className="inline-person flex items-center gap-3 [&_small]:flex [&_small]:items-center [&_small]:gap-[5px]">
-            <Art
-              name={avatar}
+            <Avatar
+              src={avatar}
+              name={displayName}
+              color={avatarColor}
               className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18! large"
             />
             <label className="btn inline-flex items-center justify-center gap-2 rounded-[11px] font-bold text-sm min-h-10 py-2 px-5.5 [transition:background_0.15s,_color_0.15s] leading-[1.25] text-center [&.primary]:bg-brand [&.primary]:text-white [&.primary:hover]:[background:#04564e] [&.white]:bg-white [&.white]:text-deep [&.light]:bg-sage [&.light]:text-deep [&.muted]:[background:#f4f1ee] [&.muted]:text-muted [&.white:hover]:[background:#d9ece5] [&.light:hover]:[background:#d9ece5] [&.muted:hover]:[background:#d9ece5] light cursor-pointer relative [&_input]:absolute [&_input]:inset-0 [&_input]:opacity-[0] [&_input]:cursor-pointer [&_input]:w-full [&_input]:h-full [&:focus-within]:[outline:2px_solid_var(--color-brand)]">
@@ -65,7 +72,51 @@ function EditProfile({ close }) {
                 onChange={(e) => select(e.target.files[0])}
               />
             </label>
+            {avatar && (
+              <Button kind="light" onClick={() => setAvatar('')}>
+                Gunakan inisial
+              </Button>
+            )}
           </div>
+          <p className="hint text-[12px] mt-3 mb-5">
+            Foto profil opsional. Tanpa foto, inisial namamu akan tampil otomatis.
+          </p>
+          {!avatar && (
+            <div className="mb-5">
+              <p className="text-sm font-semibold mb-2">Warna inisial</p>
+              <div
+                role="group"
+                aria-label="Warna inisial"
+                className="flex flex-wrap items-center gap-2"
+              >
+                <button
+                  type="button"
+                  aria-pressed={!avatarColor}
+                  onClick={() => setAvatarColor(null)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${!avatarColor ? 'border-brand bg-sage text-brand' : 'border-line text-muted'}`}
+                >
+                  Otomatis
+                </button>
+                {avatarColors.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-label={label}
+                    title={label}
+                    aria-pressed={avatarColor === value}
+                    onClick={() => setAvatarColor(value)}
+                    className="grid size-8 place-items-center rounded-full text-white outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-brand focus-visible:outline-2 focus-visible:outline-brand"
+                    style={{ backgroundColor: value }}
+                  >
+                    {avatarColor === value && <span aria-hidden="true">✓</span>}
+                  </button>
+                ))}
+              </div>
+              <p className="hint text-[12px] mt-2">
+                Otomatis memilih warna dari namamu dan tetap sama setiap kali dibuka.
+              </p>
+            </div>
+          )}
           <div className="form-grid grid grid-cols-[repeat(2,_minmax(0,_1fr))] gap-[20px_26px] mobile:gap-3.5! mobile:[&_input]:p-2.5! mobile:[&_output]:p-2.5!">
             {[
               ['name', 'Nama lengkap', 100],
@@ -80,6 +131,9 @@ function EditProfile({ close }) {
                   type={key === 'phone' ? 'tel' : 'text'}
                   maxLength={max}
                   defaultValue={user[key]}
+                  onChange={
+                    key === 'name' ? (event) => setDisplayName(event.target.value) : undefined
+                  }
                 />
               </Field>
             ))}
@@ -127,8 +181,10 @@ export function ProfilePage() {
     <main className="w-[min(88.6%,_1240px)] [margin-inline:auto] pt-[49px] pb-14.5 tablet:w-[92%]! mobile:pt-7!">
       <Head title="Profil & pengaturan akun." subtitle="Kelola informasi profil dan kontakmu." />
       <section className="[&_h2]:text-[28px] [&_.tag]:mt-6 flex items-center gap-6 p-[31px] [&_.btn]:ml-auto [&_.btn]:min-w-42.5 mobile:p-5! mobile:gap-[15px]! mobile:[&_h2]:text-[24px]! mobile:[&_.tag]:mt-2.5! mobile:flex-wrap! mobile:[&_.btn]:min-w-0! mobile:[&_.btn]:ml-0! rounded-2xl border border-line bg-white overflow-hidden">
-        <Art
-          name={user.avatar}
+        <Avatar
+          src={user.avatar}
+          name={user.name}
+          color={user.avatarColor}
           className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18! giant"
         />
         <div>
@@ -172,8 +228,10 @@ export function ProfilePage() {
                     key={t.id}
                   >
                     <div className="inline-person flex items-center gap-3 [&_small]:flex [&_small]:items-center [&_small]:gap-[5px]">
-                      <Art
-                        name={t.person.avatar}
+                      <Avatar
+                        src={t.person.avatar}
+                        name={t.person.name}
+                        color={t.person.avatarColor}
                         className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18!"
                       />
                       <div>

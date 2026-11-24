@@ -14,17 +14,31 @@ export async function seedDemo(db) {
     return d.toISOString().slice(0, 10);
   };
   await db.transaction(async (query) => {
-    const [seeded] = await query("SELECT id FROM users WHERE id = 'aldo' AND is_demo = 1");
-    if (seeded) return;
-
     const passwordHash = await hashPassword(randomUUID());
     const people = [
       ['owen', 'Owen', 'owenjastip', '12025550100'],
       ['nadia', 'Nadia', 'nadiajastip', '12025550101'],
       ['kevin', 'Kevin', 'kevinjastip', '12025550102'],
       ['aldo', 'Aldo Pratama', 'aldojastip', '12025550103'],
+      ['salsa', 'Salsa Putri', 'salsajastip', '12025550104'],
+      ['rizky', 'Rizky Aditya', 'rizkyjastip', '12025550105'],
+      ['mei', 'Mei Lin', 'meilinjastip', '12025550106'],
     ];
     for (const [id, name, handle, phone] of people) {
+      const [existing] = await query(
+        'SELECT id, is_demo FROM users WHERE id = ? OR handle_key = ?',
+        [id, usernameKey(handle)],
+      );
+      if (existing) {
+        if (existing.id !== id || !existing.is_demo) {
+          throw new Error(`Data demo ${handle} bentrok dengan akun yang sudah ada.`);
+        }
+        await query("UPDATE users SET avatar = '' WHERE id = ? AND is_demo = 1 AND avatar = ?", [
+          id,
+          id,
+        ]);
+        continue;
+      }
       await query(
         'INSERT INTO users (id,name,handle,handle_key,password_hash,recovery_hash,phone,city,avatar,is_demo) VALUES (?,?,?,?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE id = id',
         [
@@ -35,8 +49,13 @@ export async function seedDemo(db) {
           passwordHash,
           recoveryHash(recoveryCode()),
           phone,
-          id === 'aldo' ? 'Tangerang, Indonesia' : '',
-          id,
+          {
+            aldo: 'Tangerang, Indonesia',
+            salsa: 'Bandung, Indonesia',
+            rizky: 'Jakarta, Indonesia',
+            mei: 'Surabaya, Indonesia',
+          }[id] || '',
+          '',
         ],
       );
     }
@@ -106,6 +125,45 @@ export async function seedDemo(db) {
         value: 10,
         cover: 'tokyo',
         stores: ['Shinsaibashi'],
+      },
+      {
+        id: 'kualalumpur',
+        city: 'Kuala Lumpur',
+        country: 'Malaysia',
+        owner: 'salsa',
+        start: 10,
+        end: 15,
+        value: 7,
+        cover: null,
+        stores: ['Pavilion Kuala Lumpur', 'Suria KLCC', 'Central Market'],
+        days: [0, 1, 3],
+        categories: ['Fashion & aksesori', 'Beauty & lifestyle', 'Oleh-oleh'],
+      },
+      {
+        id: 'taipei',
+        city: 'Taipei',
+        country: 'Taiwan',
+        owner: 'rizky',
+        start: 14,
+        end: 19,
+        value: 9,
+        cover: null,
+        stores: ['Taipei 101', 'Ximending', 'Eslite Spectrum'],
+        days: [0, 1, 2],
+        categories: ['Fashion & lifestyle', 'Snack & kosmetik', 'Buku & merchandise'],
+      },
+      {
+        id: 'hochiminh',
+        city: 'Ho Chi Minh City',
+        country: 'Vietnam',
+        owner: 'mei',
+        start: 25,
+        end: 29,
+        value: 8,
+        cover: null,
+        stores: ['Saigon Centre', 'Ben Thanh Market', 'Lotte Mart'],
+        days: [0, 1, 2],
+        categories: ['Fashion & beauty', 'Kopi & oleh-oleh', 'Snack & kebutuhan harian'],
       },
     ];
     for (const trip of trips) {

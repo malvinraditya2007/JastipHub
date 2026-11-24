@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { Art, Icon } from '../components/Art';
+import { Icon } from '../components/Art';
+import { Avatar } from '../components/Avatar';
 import { CompactTripCard } from '../components/CompactTripCard';
 import { Report } from '../components/TripDialogs';
 import { Empty, Head, Pagination, ResourceState } from '../components/UI';
@@ -32,8 +33,10 @@ export function JastiperPage() {
       />
       <section className="grid grid-cols-[3fr_2fr] min-h-[277px] [&_>_.inline-person]:p-8.5 [&_>_.inline-person]:items-start [&_>_.inline-person]:pt-10.5 [&_>_.inline-person]:gap-[27px] [&_h2]:text-[28px] [&_.tag]:mt-6 mobile:grid-cols-[1fr]! mobile:gap-4! mobile:[&_>_.inline-person]:p-5! mobile:[&_>_.inline-person]:gap-[15px]! mobile:[&_h2]:text-[24px]! mobile:[&_.tag]:mt-2.5! rounded-2xl border border-line bg-white overflow-hidden">
         <div className="inline-person flex items-center gap-3 [&_small]:flex [&_small]:items-center [&_small]:gap-[5px]">
-          <Art
-            name={p.avatar}
+          <Avatar
+            src={p.avatar}
+            name={p.name}
+            color={p.avatarColor}
             className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18! giant"
           />
           <div>
@@ -95,8 +98,10 @@ export function JastiperPage() {
                   key={r.id}
                 >
                   <div className="inline-person flex items-center gap-3 [&_small]:flex [&_small]:items-center [&_small]:gap-[5px]">
-                    <Art
-                      name={r.author.avatar}
+                    <Avatar
+                      src={r.author.avatar}
+                      name={r.author.name}
+                      color={r.author.avatarColor}
                       className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18!"
                     />
                     <div>

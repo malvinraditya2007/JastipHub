@@ -2,6 +2,7 @@ import { twMerge } from 'tailwind-merge';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { Art, Icon } from '../components/Art';
+import { Avatar } from '../components/Avatar';
 import { countries, countryKey, fee, place, range } from '../data';
 import { Button, Empty, useSave, ResourceState, Pagination } from '../components/UI';
 import { useResource } from '../services/store';
@@ -33,13 +34,15 @@ function TripCard({ trip: t }) {
       </div>
       <div className="relative pt-[7px] px-[17px] pb-1.5 [&_h3]:text-[16px] [&_h3]:leading-[22px] [&_h3]:font-bold [&_h3]:tracking-[-0.25px] mobile:py-2.5! mobile:px-4!">
         <h3>{t.city} Trip</h3>
-        <div className="[&_.icon]:mr-[9px] text-[14px] text-muted my-[3px] mx-0">
+        <div className="flex items-center gap-[9px] text-[14px] text-muted my-[3px] mx-0">
           <Icon name="smallCal" size={17} />
           {range(t, true)}
         </div>
         <div className="flex items-center gap-[15px] mt-[3px] mx-0 mb-[9px] [&_small]:flex [&_small]:items-center [&_small]:gap-[5px] [&_small]:text-[11px] [&_small]:text-ink">
-          <Art
-            name={p.avatar}
+          <Avatar
+            src={p.avatar}
+            name={p.name}
+            color={p.avatarColor}
             alt={'Foto profil ' + p.name}
             preserveAspectRatio
             className="avatar size-[39px] shrink-0 overflow-hidden rounded-full"

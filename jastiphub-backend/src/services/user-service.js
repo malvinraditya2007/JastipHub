@@ -7,6 +7,7 @@ export function publicUser(user) {
     name: user.name,
     handle: user.handle,
     avatar: user.avatar,
+    avatarColor: user.avatar_color || null,
     city: user.city,
     rating: Number(user.rating || 0),
     count: Number(user.review_count || 0),
@@ -30,7 +31,11 @@ export function createUserService(repositories) {
         const existing = await transaction.users.findById(userId);
         if (!existing) throw missing();
         await assertOwnedMedia(transaction, profile.avatar, userId, 'avatar', existing.avatar);
-        await transaction.users.updateProfile(userId, profile);
+        await transaction.users.updateProfile(userId, {
+          ...profile,
+          avatarColor:
+            profile.avatarColor === undefined ? existing.avatar_color || null : profile.avatarColor,
+        });
       });
       return this.getProfile(userId, true);
     },
@@ -46,7 +51,12 @@ export function createUserService(repositories) {
           text: review.text,
           createdAt: review.created_at,
           city: review.city,
-          author: { id: review.author_id, name: review.name, avatar: review.avatar },
+          author: {
+            id: review.author_id,
+            name: review.name,
+            avatar: review.avatar,
+            avatarColor: review.avatar_color || null,
+          },
         })),
         meta: paginationMeta(pagination, total),
       };
