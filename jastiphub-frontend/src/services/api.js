@@ -2,7 +2,7 @@ let csrfToken = null;
 export const setCsrfToken = (value) => {
   csrfToken = value;
 };
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(error, status) {
     super(error.message);
     Object.assign(this, error, { status });
@@ -34,7 +34,7 @@ export async function request(path, { method = 'GET', body, signal, full = false
         response.status,
       );
     }
-    if (!json || !('data' in json))
+    if (!json || typeof json !== 'object' || !('data' in json))
       throw new ApiError(
         { code: 'INVALID_RESPONSE', message: 'Respons server belum sesuai. Coba lagi.' },
         502,

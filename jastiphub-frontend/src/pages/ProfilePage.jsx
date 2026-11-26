@@ -64,7 +64,7 @@ function EditProfile({ close }) {
               color={avatarColor}
               className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18! large"
             />
-            <label className="btn inline-flex items-center justify-center gap-2 rounded-[11px] font-bold text-sm min-h-10 py-2 px-5.5 [transition:background_0.15s,_color_0.15s] leading-[1.25] text-center [&.primary]:bg-brand [&.primary]:text-white [&.primary:hover]:[background:#04564e] [&.white]:bg-white [&.white]:text-deep [&.light]:bg-sage [&.light]:text-deep [&.muted]:[background:#f4f1ee] [&.muted]:text-muted [&.white:hover]:[background:#d9ece5] [&.light:hover]:[background:#d9ece5] [&.muted:hover]:[background:#d9ece5] light cursor-pointer relative [&_input]:absolute [&_input]:inset-0 [&_input]:opacity-[0] [&_input]:cursor-pointer [&_input]:w-full [&_input]:h-full [&:focus-within]:[outline:2px_solid_var(--color-brand)]">
+            <label className="btn inline-flex items-center justify-center gap-2 rounded-[11px] font-bold text-sm min-h-10 py-2 px-5.5 [transition:background_0.15s,_color_0.15s] leading-[1.25] text-center light bg-sage text-deep [&:hover]:[background:#d9ece5] cursor-pointer relative [&_input]:absolute [&_input]:inset-0 [&_input]:opacity-[0] [&_input]:cursor-pointer [&_input]:w-full [&_input]:h-full [&:focus-within]:[outline:2px_solid_var(--color-brand)]">
               {busy ? 'Memproses…' : 'Ubah foto'}
               <input
                 type="file"

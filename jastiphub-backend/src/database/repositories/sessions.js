@@ -4,7 +4,7 @@ export function sessionRepository(query) {
   return {
     async findActive(tokenHash) {
       const rows = await query(
-        `SELECT sessions.*, users.id AS account_id
+        `SELECT sessions.*, users.is_demo
          FROM sessions JOIN users ON users.id = sessions.user_id
          WHERE sessions.token_hash = ? AND sessions.expires_at > ${now}`,
         [tokenHash],

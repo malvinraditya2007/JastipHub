@@ -39,7 +39,6 @@ const countryAliases = new Map([
   ['usa', 'amerika serikat'],
 ]);
 const universalCover = 'cover-universal.png';
-export const defaultCoverAssets = new Set([...landmarkCovers.values(), universalCover]);
 
 export function countryKey(country = '') {
   const name = country.trim().toLowerCase().replace(/\s+/g, ' ');

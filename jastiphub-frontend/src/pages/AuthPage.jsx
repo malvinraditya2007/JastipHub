@@ -8,15 +8,7 @@ import { Button, Field, Loading, RequestError } from '../components/UI';
 import { request } from '../services/api';
 import { useApp } from '../services/store';
 export function AuthPage({ register = false }) {
-  const {
-    authenticate,
-    demoEnabled,
-    localPasswordReset,
-    ready,
-    error: bootError,
-    boot,
-    invalidate,
-  } = useApp();
+  const { authenticate, localPasswordReset, ready, error: bootError, boot, invalidate } = useApp();
   const nav = useNavigate();
   const loc = useLocation();
   const [params] = useSearchParams();
@@ -39,8 +31,8 @@ export function AuthPage({ register = false }) {
   const [authenticated, setAuthenticated] = useState(false);
   const labels = register
     ? [
-        ['name', 'Nama lengkap', 'Aldo Pratama'],
-        ['handle', 'Username', 'aldojastip'],
+        ['name', 'Nama lengkap', 'Nama lengkap'],
+        ['handle', 'Username', 'Username'],
         ['password', 'Password', 'Password'],
         ['phone', 'Nomor WhatsApp', '+62 81234567890'],
       ]
@@ -67,11 +59,14 @@ export function AuthPage({ register = false }) {
       setBusy(false);
     }
   }
-  async function enter(action, body) {
+  async function submit(e) {
+    e.preventDefault();
+    if (authenticated) return complete();
+    const body = Object.fromEntries(new FormData(e.currentTarget));
     setError('');
     setBusy(true);
     try {
-      const result = await authenticate(action, body);
+      const result = await authenticate(register ? 'register' : 'login', body);
       setAuthenticated(true);
       if (result.recoveryCode) setRecovery(result.recoveryCode);
       else await complete();
@@ -80,12 +75,6 @@ export function AuthPage({ register = false }) {
     } finally {
       setBusy(false);
     }
-  }
-  function submit(e) {
-    e.preventDefault();
-    if (authenticated) return complete();
-    const values = Object.fromEntries(new FormData(e.currentTarget));
-    return enter(register ? 'register' : 'login', values);
   }
   return (
     <main
@@ -210,16 +199,6 @@ export function AuthPage({ register = false }) {
                     ? 'Daftar Sekarang'
                     : 'Masuk'}
             </Button>
-            {!register && demoEnabled && (
-              <button
-                type="button"
-                disabled={busy}
-                className="[&:hover]:[text-decoration:underline] text-brand font-bold text-[13px]"
-                onClick={() => enter('demo')}
-              >
-                Masuk akun demo Aldo
-              </button>
-            )}
           </form>
         )}
         <div className="auth-switch [&_a:hover]:[text-decoration:underline] flex justify-center gap-5 text-[13px] text-muted mt-5 mx-0 mb-12 [&_a]:text-brand [&_a]:font-bold laptop-fit:[margin-block:clamp(12px,_2svh,_20px)]! mobile:mt-[15px]! mobile:mx-0! mobile:mb-5!">

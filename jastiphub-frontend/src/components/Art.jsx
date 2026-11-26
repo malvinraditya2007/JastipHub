@@ -1,25 +1,14 @@
 import { twMerge } from 'tailwind-merge';
 import { defaultCoverAssets } from '../data';
-const sprite = 'explore-AvatarAldo';
 const picture = {
   logo: ['explore-JastipHubImportedAirplaneLogo', 165.03, 148.21, -33.21, -19.78],
   hero: ['explore-HeroPhotoImportedBackgroundOnly', 100, 149.07, 0, -7.22],
-  tokyoCard: [sprite, 345.66, 1194.25, -19.18, -762.07],
-  seoulCard: [sprite, 351.28, 1180.68, -126.22, -751.14],
-  singaporeCard: [sprite, 344.87, 1180.68, -226.65, -751.14],
-  tokyo: ['tokyo-TokyoShoppingDistrictGenerated', 112.79, 123.87, -5.9, -7.42],
-  tokyoProfile: ['owen-TokyoVisual', 140.12, 123.87, -10.18, -11.94],
-  seoul: ['seoul-DestinationPhotoSeoulKoreaSelatan'],
-  singapore: ['singapore-DestinationPhotoSingapura'],
   login: ['login-OriginalJapaneseTravelStillLife'],
   register: ['register-ShoppingToteStillLife', 141.86, 137.14, -32.99, -35.71],
 };
 const imageRatios = {
-  [sprite]: 1514 / 1039,
   'explore-JastipHubImportedAirplaneLogo': 1312 / 1199,
   'explore-HeroPhotoImportedBackgroundOnly': 2175 / 723,
-  'tokyo-TokyoShoppingDistrictGenerated': 1376 / 768,
-  'owen-TokyoVisual': 1376 / 768,
   'register-ShoppingToteStillLife': 1376 / 768,
 };
 export function Art({

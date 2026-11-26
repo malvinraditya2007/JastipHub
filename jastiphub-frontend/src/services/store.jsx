@@ -18,7 +18,6 @@ export function Store({ children }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [revision, setRevision] = useState(0);
-  const [demoEnabled, setDemoEnabled] = useState(false);
   const [localPasswordReset, setLocalPasswordReset] = useState(false);
   const [localResetReady, setLocalResetReady] = useState(false);
   // Mencegah request simpan favorit yang sama terkirim bersamaan.
@@ -32,7 +31,6 @@ export function Store({ children }) {
       const session = await request('/auth/session');
       setUser(session.user);
       setCsrfToken(session.csrfToken);
-      setDemoEnabled(session.demoEnabled);
       setLocalPasswordReset(session.localPasswordReset);
       let resetReady = session.localResetReady;
       if (key && session.localPasswordReset) {
@@ -74,7 +72,11 @@ export function Store({ children }) {
     return data;
   }
   async function logout() {
-    await request('/auth/logout', { method: 'POST' });
+    try {
+      await request('/auth/logout', { method: 'POST' });
+    } catch (error) {
+      if (error.status !== 401) throw error;
+    }
     setUser(null);
     setCsrfToken(null);
     invalidate();
@@ -135,7 +137,6 @@ export function Store({ children }) {
         ready,
         error,
         boot,
-        demoEnabled,
         localPasswordReset,
         localResetReady,
         revision,

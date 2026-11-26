@@ -2,7 +2,6 @@ import { createServer } from 'node:http';
 import { configuration } from './config.js';
 import { database } from './database/connection.js';
 import { initDatabase } from './database/init.js';
-import { seedDemo } from './database/seed.js';
 import { createRepositories } from './database/repositories/index.js';
 import { createApp } from './app.js';
 import { errorHandler, missing } from './errors.js';
@@ -22,7 +21,6 @@ try {
     throw new Error('Gunakan npm run build lalu npm start untuk production.');
   db = database(config.database);
   await initDatabase(db);
-  if (config.demo) await seedDemo(db);
   const repositories = createRepositories(db);
   const app = await createApp(db, config);
   server = createServer(app);

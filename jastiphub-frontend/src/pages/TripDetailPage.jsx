@@ -60,7 +60,7 @@ export function TripDetailPage() {
           className="rounded-[16px] min-h-97.5 tablet:min-h-80! mobile:min-h-0! mobile:aspect-[1.91]!"
           alt={place(t)}
         />
-        <aside className="rounded-2xl border border-line bg-white overflow-hidden pt-6.5 px-6 pb-[21px] min-h-[429px] [&_hr]:mt-[17px] [&_hr]:mx-0 [&_hr]:mb-5 [&_.avatar]:w-[49px] [&_.avatar]:h-[49px] [&_>_.text-btn]:flex [&_>_.text-btn]:mt-[25px] [&_>_.text-btn]:mx-0 [&_>_.text-btn]:mb-7.5 [&_>_.btn]:w-full [&_>_.btn]:min-h-12 [&_.hint_+_.hint]:mt-[3px] mobile:min-h-0! mobile:p-5! mobile:[&_>_.text-btn]:my-4! mobile:[&_>_.text-btn]:mx-0!">
+        <aside className="rounded-2xl border border-line bg-white overflow-hidden pt-6.5 px-6 pb-[21px] min-h-[429px] [&_hr]:mt-[17px] [&_hr]:mx-0 [&_hr]:mb-5 [&_.avatar]:w-[49px] [&_.avatar]:h-[49px] [&_>_.btn]:w-full [&_>_.btn]:min-h-12 [&_.hint_+_.hint]:mt-[3px] mobile:min-h-0! mobile:p-5!">
           <h4>Fee jastip per barang</h4>
           <div className="fee-line flex items-center gap-[13px] text-[14px] text-muted mt-3.5 [&_strong]:text-[40px] [&_strong]:text-brand [&_strong]:leading-[1.2] tablet:flex-wrap! mobile:[&_strong]:text-[34px]!">
             <strong>{fee(t)}</strong>

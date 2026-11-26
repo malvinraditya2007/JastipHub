@@ -78,4 +78,3 @@ export function destinationCover(country) {
 }
 
 export const maskPhone = (phone) => '•••• •••• ' + phone.slice(-4);
-export const normalizePhone = (s) => s.replace(/[^0-9]/g, '').replace(/^0/, '62');

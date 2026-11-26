@@ -47,7 +47,6 @@ export function configuration(env = process.env) {
     host,
     origin,
     cookieSameSite,
-    demo: !production && env.ENABLE_DEMO === 'true',
     localPasswordReset,
     trustProxy: Number(env.TRUST_PROXY || 0),
     uploadDir: resolve(projectRoot, env.UPLOAD_DIR || 'storage/uploads'),

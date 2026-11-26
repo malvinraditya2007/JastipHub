@@ -5,6 +5,10 @@ import { todayInJakarta } from '../utils/date.js';
 import { publicUser, paginationMeta } from './user-service.js';
 import { assertOwnedMedia } from './media-service.js';
 
+// Older trip records use image names that are now replaced by destination covers.
+const legacyCovers = new Set(['tokyo', 'seoul', 'singapore']);
+const legacyThumbnails = new Set(['tokyoCard', 'seoulCard', 'singaporeCard']);
+
 export function createTripService(repositories) {
   async function hydrate(rows, viewerId) {
     if (!rows.length) return [];
@@ -31,6 +35,7 @@ export function createTripService(repositories) {
 
     return rows.map((trip) => {
       const itinerary = stopsByTripId.get(trip.id) || [];
+      const customCover = legacyCovers.has(trip.cover) ? null : trip.cover;
       return {
         id: trip.id,
         owner: trip.owner_id,
@@ -41,9 +46,9 @@ export function createTripService(repositories) {
         end: trip.end_date || '',
         type: trip.fee_type,
         value: trip.fee_value === null ? null : Number(trip.fee_value),
-        cover: trip.cover || destinationCover(trip.country),
-        customCover: trip.cover,
-        thumb: trip.thumb || undefined,
+        cover: customCover || destinationCover(trip.country),
+        customCover,
+        thumb: legacyThumbnails.has(trip.thumb) ? undefined : trip.thumb || undefined,
         status: trip.status,
         version: trip.version,
         stops: itinerary,

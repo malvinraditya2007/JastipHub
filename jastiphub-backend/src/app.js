@@ -40,7 +40,7 @@ export async function createApp(database, config) {
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 
-  await mkdir(config.uploadDir, { recursive: true });
+  if (!config.cloudinary) await mkdir(config.uploadDir, { recursive: true });
   app.use(
     '/uploads',
     express.static(config.uploadDir, {

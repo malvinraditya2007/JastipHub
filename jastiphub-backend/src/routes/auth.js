@@ -36,7 +36,6 @@ export function registerAuthRoutes(api, services, config) {
     sendSuccess(res, {
       user: req.user ? await services.users.getProfile(req.user.id, true) : null,
       csrfToken: req.session?.csrf_token || null,
-      demoEnabled: config.demo,
       localPasswordReset: config.localPasswordReset,
       localResetReady: localReset.unlocked(req),
     }),
@@ -51,9 +50,6 @@ export function registerAuthRoutes(api, services, config) {
   api.post('/auth/login', authLimit, async (req, res) => {
     const result = await services.auth.login(schema.login.parse(req.body), req.session?.token_hash);
     sendLogin(res, result);
-  });
-  api.post('/auth/demo', authLimit, async (req, res) => {
-    sendLogin(res, await services.auth.demo(req.session?.token_hash));
   });
   api.post('/auth/local-reset/unlock', rateLimitRequests(8, 15 * 60000), (req, res) => {
     localReset.unlock(req, res);

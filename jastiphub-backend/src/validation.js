@@ -4,8 +4,8 @@ import { normalizePhone } from './utils/phone.js';
 const text = (max, label) =>
   z.string().trim().min(1, `${label} wajib diisi.`).max(max, `${label} maksimal ${max} karakter.`);
 export const id = z.string().regex(/^[a-zA-Z0-9-]{1,36}$/, 'ID tidak valid.');
-export const handle = z.string().trim().min(1, 'Username wajib diisi.');
-export const password = z.string().min(1, 'Password wajib diisi.');
+const handle = z.string().trim().min(1, 'Username wajib diisi.');
+const password = z.string().min(1, 'Password wajib diisi.');
 const phone = z
   .string()
   .max(30)
@@ -28,7 +28,7 @@ export const profile = z
       .optional(),
   })
   .strict();
-export const date = z
+const date = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .refine((value) => {

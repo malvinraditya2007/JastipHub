@@ -154,7 +154,7 @@ export function WhatsApp({ trip: t, close, preview = false, stopId }) {
           user &&
           (fallbackUrl ? (
             <a
-              className="btn inline-flex items-center justify-center gap-2 rounded-[11px] font-bold text-sm min-h-10 py-2 px-5.5 [transition:background_0.15s,_color_0.15s] leading-[1.25] text-center [&.primary]:bg-brand [&.primary]:text-white [&.primary:hover]:[background:#04564e] [&.white]:bg-white [&.white]:text-deep [&.light]:bg-sage [&.light]:text-deep [&.muted]:[background:#f4f1ee] [&.muted]:text-muted [&.white:hover]:[background:#d9ece5] [&.light:hover]:[background:#d9ece5] [&.muted:hover]:[background:#d9ece5] primary"
+              className="btn inline-flex items-center justify-center gap-2 rounded-[11px] font-bold text-sm min-h-10 py-2 px-5.5 [transition:background_0.15s,_color_0.15s] leading-[1.25] text-center primary bg-brand text-white [&:hover]:[background:#04564e]"
               href={fallbackUrl}
               target="_blank"
               rel="noopener noreferrer"

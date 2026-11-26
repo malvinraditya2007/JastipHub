@@ -253,7 +253,7 @@ function EditorForm({ existing }) {
       </div>
       <div className="grid gap-6 grid-cols-[minmax(0,_1.97fr)_minmax(0,_1fr)] tablet:grid-cols-[minmax(0,_1.4fr)_minmax(0,_1fr)]! mobile:grid-cols-[1fr]! mobile:gap-4! mobile:flex! mobile:flex-col!">
         <form
-          className="rounded-2xl border border-line bg-white overflow-hidden p-[25px] [&_.sub]:text-[13px] [&_h3]:mt-[27px] [&_h3]:mx-0 [&_h3]:mb-[5px] [&_hr]:my-7 [&_hr]:mx-0 [&_>_.btn.light]:mt-[15px] [&_>_.btn.light]:mx-0 [&_>_.btn.light]:mb-0 mobile:p-4.5! mobile:[&_.actions_.btn]:[flex:1]!"
+          className="rounded-2xl border border-line bg-white overflow-hidden p-[25px] [&_.sub]:text-[13px] [&_h3]:mt-[27px] [&_h3]:mx-0 [&_h3]:mb-[5px] [&_hr]:my-7 [&_hr]:mx-0 mobile:p-4.5! mobile:[&_.actions_.btn]:[flex:1]!"
           onSubmit={(e) => {
             e.preventDefault();
             save('published');
@@ -316,7 +316,7 @@ function EditorForm({ existing }) {
               Hari ke-0 adalah tanggal berangkat. Jadwal tidak dapat diubah setelah ada permintaan
               kontak.
             </p>
-            <div className="flex items-center flex-wrap my-4 mx-0 gap-[9px] [&_>_.text-btn]:ml-auto">
+            <div className="flex items-center flex-wrap my-4 mx-0 gap-[9px]">
               {t.stores.map((name, i) => (
                 <div className="w-full p-3 [border:1px_solid_#e6e4e5] rounded-[10px]" key={name}>
                   <div className="flex justify-between items-center gap-3 mb-3">

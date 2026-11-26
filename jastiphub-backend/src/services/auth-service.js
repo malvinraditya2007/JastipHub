@@ -51,9 +51,10 @@ export async function createAuthService(repositories, config) {
   }
 
   return {
-    readSession(rawToken) {
+    async readSession(rawToken) {
       if (typeof rawToken !== 'string' || !/^[a-f0-9]{64}$/.test(rawToken)) return null;
-      return repositories.sessions.findActive(sha256(rawToken));
+      const session = await repositories.sessions.findActive(sha256(rawToken));
+      return session && !session.is_demo ? session : null;
     },
 
     async register(data, previousSessionHash) {
@@ -79,7 +80,7 @@ export async function createAuthService(repositories, config) {
         data.password,
         account?.password_hash || dummyPasswordHash,
       );
-      if (!valid || !account || (account.is_demo && !config.demo)) {
+      if (!valid || !account || account.is_demo) {
         throw new ApiError(401, 'INVALID_CREDENTIALS', 'Username atau password belum sesuai.');
       }
       const session = await repositories.transaction(async (transaction) => {
@@ -89,17 +90,6 @@ export async function createAuthService(repositories, config) {
         }
         return makeSession(transaction, account.id, previousSessionHash);
       });
-      return loginResult(account.id, session);
-    },
-
-    async demo(previousSessionHash) {
-      if (!config.demo) throw missing();
-      const account = await repositories.users.findById('aldo');
-      if (!account?.is_demo)
-        throw new ApiError(503, 'DEMO_UNAVAILABLE', 'Data demo belum disiapkan.');
-      const session = await repositories.transaction((transaction) =>
-        makeSession(transaction, account.id, previousSessionHash),
-      );
       return loginResult(account.id, session);
     },
 

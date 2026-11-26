@@ -1,6 +1,0 @@
-node_modules/
-dist/
-.qa/
-.env
-.env.*
-!.env.example

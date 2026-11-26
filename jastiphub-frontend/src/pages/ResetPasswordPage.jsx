@@ -58,8 +58,8 @@ export function ResetPasswordPage() {
           <>
             {needsLocalLauncher && (
               <p className="sub text-[14px] mt-2 mobile:text-[13px]!">
-                Buka aplikasi dari <code>jastiphub-backend/.data/.jastiphub-local.html</code> untuk
-                mereset akun lokal.
+                Buka aplikasi dari <code>jastiphub-backend/storage/.jastiphub-local.html</code>{' '}
+                untuk mereset akun lokal.
               </p>
             )}
             {!localPasswordReset && (
