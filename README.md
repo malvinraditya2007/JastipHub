@@ -94,6 +94,7 @@ JastipHub/
       services/
         api.js                    # Mengirim permintaan ke backend
         store.jsx                 # Data akun dan aksi yang dipakai bersama
+        resource-cache.js         # Menyimpan data sementara agar pindah halaman lebih cepat
       utils/avatar.js             # Menentukan inisial dan warna avatar
     public/art/                   # Gambar dan ikon bawaan
       flags/                      # Bendera negara

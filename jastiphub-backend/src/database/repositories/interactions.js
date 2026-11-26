@@ -72,21 +72,23 @@ export function reviewRepository(query) {
       return rows[0];
     },
     async listForOwner(ownerId, pagination) {
-      const [{ total }] = await query(
-        `SELECT COUNT(*) AS total FROM reviews JOIN trips ON trips.id = reviews.trip_id
-         WHERE trips.owner_id = ?`,
-        [ownerId],
-      );
       const offset = (pagination.page - 1) * pagination.pageSize;
-      const rows = await query(
-        `SELECT reviews.id, reviews.trip_id, reviews.rating, reviews.text, reviews.created_at,
-                users.id AS author_id, users.name, users.avatar, users.avatar_color, trips.city
-         FROM reviews JOIN trips ON trips.id = reviews.trip_id
-         JOIN users ON users.id = reviews.author_id
-         WHERE trips.owner_id = ? ORDER BY reviews.created_at DESC, reviews.id
-         LIMIT ${pagination.pageSize} OFFSET ${offset}`,
-        [ownerId],
-      );
+      const [[{ total }], rows] = await Promise.all([
+        query(
+          `SELECT COUNT(*) AS total FROM reviews JOIN trips ON trips.id = reviews.trip_id
+           WHERE trips.owner_id = ?`,
+          [ownerId],
+        ),
+        query(
+          `SELECT reviews.id, reviews.trip_id, reviews.rating, reviews.text, reviews.created_at,
+                  users.id AS author_id, users.name, users.avatar, users.avatar_color, trips.city
+           FROM reviews JOIN trips ON trips.id = reviews.trip_id
+           JOIN users ON users.id = reviews.author_id
+           WHERE trips.owner_id = ? ORDER BY reviews.created_at DESC, reviews.id
+           LIMIT ${pagination.pageSize} OFFSET ${offset}`,
+          [ownerId],
+        ),
+      ]);
       return { rows, total: Number(total) };
     },
     create(review) {

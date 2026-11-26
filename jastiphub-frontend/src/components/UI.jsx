@@ -1,5 +1,5 @@
 import { twMerge } from 'tailwind-merge';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { useApp } from '../services/store';
 import { Icon } from './Art';
@@ -75,7 +75,7 @@ export function Gate({ children }) {
   if (!ready)
     return (
       <main className="w-[min(88.6%,_1240px)] [margin-inline:auto] pt-[49px] pb-14.5 tablet:w-[92%]! mobile:pt-7!">
-        <Loading />
+        <Loading label="Menyiapkan akunmu…" />
       </main>
     );
   if (error)
@@ -90,11 +90,140 @@ export function Gate({ children }) {
     <Navigate replace to={'/login?next=' + encodeURIComponent(loc.pathname + loc.search)} />
   );
 }
-export function Loading() {
+const loadingTips = [
+  'Periksa tanggal perjalanan dan biaya jastip sebelum menitip barang.',
+  'Tanyakan ketersediaan produk dan total biaya lewat WhatsApp jastiper.',
+  'Simpan trip yang menarik supaya mudah ditemukan lagi di My Trips.',
+];
+
+function SkeletonLine({ className = '' }) {
+  return <span className={twMerge('loading-skeleton block h-3 rounded-full', className)} />;
+}
+
+function LoadingSkeleton({ variant }) {
+  if (variant === 'compact') return null;
+  if (variant === 'profile')
+    return (
+      <div className="flex flex-wrap items-center gap-6 rounded-2xl border border-line bg-white p-7">
+        <SkeletonLine className="size-24 shrink-0 rounded-full" />
+        <div className="grid flex-1 gap-4 min-w-40">
+          <SkeletonLine className="h-6 w-3/5" />
+          <SkeletonLine className="w-2/5" />
+          <SkeletonLine className="h-8 w-28" />
+        </div>
+      </div>
+    );
+  if (variant === 'detail')
+    return (
+      <div className="grid gap-5">
+        <SkeletonLine className="h-8 w-2/5" />
+        <SkeletonLine className="w-3/5" />
+        <div className="grid grid-cols-[2fr_1fr] gap-5 mobile:grid-cols-1">
+          <SkeletonLine className="h-80 rounded-2xl mobile:h-52" />
+          <div className="grid content-start gap-5 rounded-2xl border border-line bg-white p-6">
+            <SkeletonLine className="h-8 w-1/2" />
+            <SkeletonLine className="h-14" />
+            <SkeletonLine className="w-4/5" />
+            <SkeletonLine className="h-11 mt-6 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  const cards = variant === 'cards';
   return (
-    <p className="py-7 px-0" role="status">
-      Memuat data…
-    </p>
+    <div className={cards ? 'grid gap-[19px] md:grid-cols-2 lg:grid-cols-3' : 'grid gap-4'}>
+      {Array.from({ length: cards ? 3 : 2 }, (_, index) => (
+        <div
+          key={index}
+          className={twMerge(
+            'overflow-hidden rounded-2xl border border-line bg-white',
+            !cards && 'flex',
+          )}
+        >
+          <SkeletonLine
+            className={cards ? 'h-32 rounded-none' : 'min-h-32 w-1/4 shrink-0 rounded-none'}
+          />
+          <div className="grid flex-1 gap-4 p-5">
+            <SkeletonLine className="h-5 w-3/5" />
+            <SkeletonLine className="w-4/5" />
+            {cards && (
+              <div className="flex items-center gap-3">
+                <SkeletonLine className="size-10 shrink-0 rounded-full" />
+                <SkeletonLine className="w-1/2" />
+              </div>
+            )}
+            <SkeletonLine className={cards ? 'h-9 rounded-xl' : 'w-2/5'} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function Loading({ variant = 'compact', label = 'Menyiapkan datamu…', onRetry }) {
+  const [showTip, setShowTip] = useState(false);
+  const [tip, setTip] = useState(0);
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSlow(true), 6000);
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <section className="my-4" aria-label="Memuat data">
+      <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+        <div className="flex items-center gap-3">
+          <span
+            className="grid size-11 shrink-0 place-items-center rounded-2xl bg-sage"
+            aria-hidden="true"
+          >
+            <span className="loading-spinner size-5" />
+          </span>
+          <div role="status" aria-live="polite">
+            <p className="text-sm font-bold text-ink">{label}</p>
+            {slow && (
+              <p className="text-xs mt-1">Masih mengambil data. Koneksi mungkin sedang lambat.</p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          {slow && onRetry && (
+            <button
+              type="button"
+              className="text-xs font-bold text-brand underline"
+              onClick={onRetry}
+            >
+              Coba lagi
+            </button>
+          )}
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-xs font-bold text-brand py-2"
+            aria-expanded={showTip}
+            onClick={() => setShowTip((value) => !value)}
+          >
+            {showTip ? 'Tutup tips' : 'Tips titip aman'}
+            <Icon name="down" size={14} className={showTip ? 'rotate-180' : ''} />
+          </button>
+        </div>
+      </div>
+      {showTip && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#cfe6dc] bg-sage p-4">
+          <p className="flex-1 min-w-40 text-sm text-deep" aria-live="polite">
+            {loadingTips[tip]}
+          </p>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 text-xs font-bold text-brand py-2"
+            onClick={() => setTip((value) => (value + 1) % loadingTips.length)}
+          >
+            Tips berikutnya <Icon name="arrow" size={14} />
+          </button>
+        </div>
+      )}
+      <div aria-hidden="true">
+        <LoadingSkeleton variant={variant} />
+      </div>
+    </section>
   );
 }
 export function RequestError({ error, retry }) {
@@ -114,13 +243,21 @@ export function RequestError({ error, retry }) {
     </div>
   );
 }
-export function ResourceState({ resource }) {
-  if (resource.loading) return <Loading />;
+export function ResourceState({ resource, variant = 'list', label }) {
+  if (resource.loading)
+    return <Loading variant={variant} label={label} onRetry={resource.reload} />;
   if (resource.error)
     return resource.error.status === 404 ? (
       <Missing />
     ) : (
       <RequestError error={resource.error} retry={resource.reload} />
+    );
+  if (resource.refreshing)
+    return (
+      <p className="flex items-center gap-2 py-3 text-xs" role="status">
+        <span className="loading-spinner size-3" aria-hidden="true" />
+        Memperbarui data…
+      </p>
     );
   return null;
 }

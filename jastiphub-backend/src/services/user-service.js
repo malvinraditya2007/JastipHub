@@ -41,8 +41,10 @@ export function createUserService(repositories) {
     },
 
     async listReviews(ownerId, pagination) {
-      await this.getProfile(ownerId);
-      const { rows, total } = await repositories.reviews.listForOwner(ownerId, pagination);
+      const [, { rows, total }] = await Promise.all([
+        this.getProfile(ownerId),
+        repositories.reviews.listForOwner(ownerId, pagination),
+      ]);
       return {
         data: rows.map((review) => ({
           id: review.id,

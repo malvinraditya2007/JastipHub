@@ -29,13 +29,14 @@ export function TripDetailPage() {
   if (!t || resource.loading || resource.error)
     return (
       <main className="w-[min(88.6%,_1240px)] [margin-inline:auto] pt-[49px] pb-14.5 tablet:w-[92%]! mobile:pt-7!">
-        <ResourceState resource={resource} />
+        <ResourceState resource={resource} variant="detail" label="Menyiapkan detail perjalanan…" />
       </main>
     );
   const p = t.person;
   const own = t.owner === user?.id;
   return (
     <main className="w-[min(88.6%,_1240px)] [margin-inline:auto] pt-[49px] pb-14.5 tablet:w-[92%]! mobile:pt-7! [&_h1]:text-[37px] mobile:[&_h1]:text-[30px]! mobile:[&_>_small]:block!">
+      <ResourceState resource={resource} />
       <div className="flex items-center justify-between gap-5 mb-[59px] mobile:items-start! mobile:gap-2! mobile:mb-5.5! mobile:[&_>_.btn]:text-[12px]! mobile:[&_>_.btn]:min-h-8.5! mobile:[&_>_.btn]:py-[7px]! mobile:[&_>_.btn]:px-2.5!">
         <div>
           <h1 className="mobile:text-[30px]!">{place(t)}</h1>

@@ -22,7 +22,7 @@ export function JastiperPage() {
   if (!p || profile.loading || profile.error)
     return (
       <main className="w-[min(88.6%,_1240px)] [margin-inline:auto] pt-[49px] pb-14.5 tablet:w-[92%]! mobile:pt-7!">
-        <ResourceState resource={profile} />
+        <ResourceState resource={profile} variant="profile" label="Menyiapkan profil jastiper…" />
       </main>
     );
   return (
@@ -31,6 +31,7 @@ export function JastiperPage() {
         title="Kenali orang di balik trip."
         subtitle="Periksa reputasi, aktivitas trip, dan ulasan sebelum mengambil keputusan."
       />
+      <ResourceState resource={profile} />
       <section className="grid grid-cols-[3fr_2fr] min-h-[277px] [&_>_.inline-person]:p-8.5 [&_>_.inline-person]:items-start [&_>_.inline-person]:pt-10.5 [&_>_.inline-person]:gap-[27px] [&_h2]:text-[28px] [&_.tag]:mt-6 mobile:grid-cols-[1fr]! mobile:gap-4! mobile:[&_>_.inline-person]:p-5! mobile:[&_>_.inline-person]:gap-[15px]! mobile:[&_h2]:text-[24px]! mobile:[&_.tag]:mt-2.5! rounded-2xl border border-line bg-white overflow-hidden">
         <div className="inline-person flex items-center gap-3 [&_small]:flex [&_small]:items-center [&_small]:gap-[5px]">
           <Avatar

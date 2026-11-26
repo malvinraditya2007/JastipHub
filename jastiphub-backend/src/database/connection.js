@@ -21,13 +21,22 @@ export function database(options) {
     },
   });
 
+  const initialized = new Set();
+  pool.on('connection', (connection) => {
+    const id = connection.threadId;
+    initialized.delete(id);
+    connection.once('end', () => initialized.delete(id));
+  });
+
   async function acquire() {
     const connection = await pool.getConnection();
+    if (initialized.has(connection.threadId)) return connection;
     try {
       await connection.query("SET time_zone = '+00:00'");
+      initialized.add(connection.threadId);
       return connection;
     } catch (error) {
-      connection.release();
+      connection.destroy();
       throw error;
     }
   }

@@ -14,11 +14,11 @@ export function createTripService(repositories) {
     if (!rows.length) return [];
     const tripIds = rows.map((trip) => trip.id);
     const ownerIds = [...new Set(rows.map((trip) => trip.owner_id))];
-    const stops = await repositories.trips.stopsByTripIds(tripIds);
-    const users = await repositories.users.profilesByIds(ownerIds);
-    const bookmarks = viewerId
-      ? await repositories.bookmarks.tripIdsForUser(viewerId, tripIds)
-      : [];
+    const [stops, users, bookmarks] = await Promise.all([
+      repositories.trips.stopsByTripIds(tripIds),
+      repositories.users.profilesByIds(ownerIds),
+      viewerId ? repositories.bookmarks.tripIdsForUser(viewerId, tripIds) : [],
+    ]);
     const savedIds = new Set(bookmarks.map((bookmark) => bookmark.trip_id));
     const usersById = new Map(users.map((user) => [user.id, publicUser(user)]));
     const stopsByTripId = new Map();

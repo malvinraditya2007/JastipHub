@@ -52,10 +52,6 @@ export function tripRepository(query, transactional = false) {
       }
 
       const where = conditions.join(' AND ');
-      const [{ total }] = await query(
-        `SELECT COUNT(*) AS total FROM trips JOIN users ON users.id = trips.owner_id WHERE ${where}`,
-        values,
-      );
       const order = {
         soon: 'trips.start_date ASC',
         latest: 'trips.start_date DESC',
@@ -66,12 +62,18 @@ export function tripRepository(query, transactional = false) {
         ) DESC`,
       }[filter.sort];
       const offset = (filter.page - 1) * filter.pageSize;
-      const rows = await query(
-        `SELECT trips.* FROM trips JOIN users ON users.id = trips.owner_id
-         WHERE ${where} ORDER BY ${order}, trips.id ASC
-         LIMIT ${filter.pageSize} OFFSET ${offset}`,
-        values,
-      );
+      const [[{ total }], rows] = await Promise.all([
+        query(
+          `SELECT COUNT(*) AS total FROM trips JOIN users ON users.id = trips.owner_id WHERE ${where}`,
+          values,
+        ),
+        query(
+          `SELECT trips.* FROM trips JOIN users ON users.id = trips.owner_id
+           WHERE ${where} ORDER BY ${order}, trips.id ASC
+           LIMIT ${filter.pageSize} OFFSET ${offset}`,
+          values,
+        ),
+      ]);
       return { rows, total: Number(total) };
     },
 

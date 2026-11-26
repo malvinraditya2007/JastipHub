@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { request, setCsrfToken } from './api';
+import { createResourceCache } from './resource-cache';
 
 const Context = createContext(null);
 export const useApp = () => useContext(Context);
@@ -18,11 +19,15 @@ export function Store({ children }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [revision, setRevision] = useState(0);
+  const [resourceCache] = useState(() => createResourceCache());
   const [localPasswordReset, setLocalPasswordReset] = useState(false);
   const [localResetReady, setLocalResetReady] = useState(false);
   // Mencegah request simpan favorit yang sama terkirim bersamaan.
   const locks = useRef(new Set());
-  const invalidate = useCallback(() => setRevision((n) => n + 1), []);
+  const invalidate = useCallback(() => {
+    resourceCache.clear();
+    setRevision((n) => n + 1);
+  }, [resourceCache]);
   const boot = useCallback(async () => {
     const key = takeLocalResetKey();
     setError('');
@@ -140,6 +145,7 @@ export function Store({ children }) {
         localPasswordReset,
         localResetReady,
         revision,
+        resourceCache,
         invalidate,
         authenticate,
         logout,
@@ -157,26 +163,53 @@ export function Store({ children }) {
 }
 
 export function useResource(path, { full = false } = {}) {
-  const { revision, user } = useApp();
+  const { revision, user, ready, resourceCache } = useApp();
   const [retry, setRetry] = useState(0);
-  const [state, setState] = useState({ data: null, loading: !!path, error: null });
-  const identity = user?.id;
+  const key = JSON.stringify([user?.id || null, path, full]);
+  const cached = path ? resourceCache.get(key) : null;
+  const initial = {
+    key,
+    data: cached?.data ?? null,
+    loading: !!path && !cached,
+    refreshing: !!cached && !cached.fresh,
+    error: null,
+  };
+  const [state, setState] = useState(initial);
   useEffect(() => {
     if (!path) {
-      setState({ data: null, loading: false, error: null });
+      setState({ key, data: null, loading: false, refreshing: false, error: null });
+      return;
+    }
+    if (!ready) return;
+    const saved = resourceCache.get(key);
+    if (saved?.fresh) {
+      setState({ key, data: saved.data, loading: false, refreshing: false, error: null });
       return;
     }
     // Batalkan request lama ketika halaman atau filter berubah.
     const controller = new AbortController();
-    setState({ data: null, loading: true, error: null });
+    const generation = resourceCache.generation;
+    setState((previous) => {
+      const data = saved?.data ?? (previous.key === key ? previous.data : null);
+      return { key, data, loading: data === null, refreshing: data !== null, error: null };
+    });
     request(path, { signal: controller.signal, full })
       .then((data) => {
-        if (!controller.signal.aborted) setState({ data, loading: false, error: null });
+        if (controller.signal.aborted) return;
+        resourceCache.set(key, data, generation);
+        setState({ key, data, loading: false, refreshing: false, error: null });
       })
       .catch((error) => {
-        if (!controller.signal.aborted) setState({ data: null, loading: false, error });
+        if (!controller.signal.aborted)
+          setState({ key, data: null, loading: false, refreshing: false, error });
       });
     return () => controller.abort();
-  }, [path, revision, identity, retry, full]);
-  return { ...state, reload: () => setRetry((n) => n + 1) };
+  }, [path, key, revision, retry, full, ready, resourceCache]);
+  return {
+    ...(state.key === key ? state : initial),
+    reload: () => {
+      resourceCache.delete(key);
+      setRetry((n) => n + 1);
+    },
+  };
 }

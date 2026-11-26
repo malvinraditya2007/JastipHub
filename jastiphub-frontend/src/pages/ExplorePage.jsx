@@ -343,7 +343,7 @@ export function ExplorePage() {
             Reset filter
           </button>
         )}
-        <ResourceState resource={resource} />
+        <ResourceState resource={resource} variant="cards" label="Mencari trip untukmu…" />
         {!resource.loading &&
           !resource.error &&
           (results.length ? (
