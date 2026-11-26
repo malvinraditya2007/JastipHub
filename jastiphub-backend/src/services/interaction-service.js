@@ -3,6 +3,7 @@ import { ApiError, missing } from '../errors.js';
 import { todayInJakarta } from '../utils/date.js';
 import { createTripService } from './trip-service.js';
 import { createUserService } from './user-service.js';
+import { assertOwnedMedia } from './media-service.js';
 
 export function createInteractionService(repositories) {
   const trips = createTripService(repositories);
@@ -79,6 +80,9 @@ export function createInteractionService(repositories) {
         const allowed = await createInteractionService(transaction).eligibility(trip, userId);
         if (!allowed.eligible)
           throw new ApiError(allowed.reviewed ? 409 : 403, 'REVIEW_NOT_ALLOWED', allowed.reason);
+        const photos = await Promise.all(
+          data.photos.map((url) => assertOwnedMedia(transaction, url, userId, 'review')),
+        );
         const id = randomUUID();
         await transaction.reviews.create({
           id,
@@ -87,11 +91,15 @@ export function createInteractionService(repositories) {
           rating: data.rating,
           text: data.text,
         });
+        for (const [position, media] of photos.entries()) {
+          await transaction.reviews.addPhoto(id, media.id, position);
+        }
         return {
           id,
           tripId,
           rating: data.rating,
           text: data.text,
+          photos: data.photos,
           jastiper: await createUserService(transaction).getProfile(trip.owner),
         };
       });

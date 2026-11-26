@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Icon } from '../components/Art';
 import { Report } from '../components/TripDialogs';
+import { ReviewPhotos } from '../components/ReviewPhotos';
 import { Button, Field, Head, ResourceState } from '../components/UI';
 import { range } from '../data';
+import { validateImage } from '../images';
 import { request } from '../services/api';
 import { useApp, useResource } from '../services/store';
 export function ReviewPage() {
   const { id } = useParams();
-  const { invalidate, setMessage } = useApp();
+  const { invalidate, setMessage, upload } = useApp();
   const nav = useNavigate();
   const trip = useResource('/trips/' + encodeURIComponent(id));
   const eligibility = useResource('/trips/' + encodeURIComponent(id) + '/review-eligibility');
@@ -16,8 +18,34 @@ export function ReviewPage() {
   const [error, setError] = useState('');
   const [report, setReport] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [photos, setPhotos] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const picker = useRef(null);
+  const photoLock = useRef(false);
+  async function addPhotos(files) {
+    if (!files.length || photoLock.current || busy) return;
+    photoLock.current = true;
+    setError('');
+    try {
+      if (photos.length + files.length > 3) throw new Error('Maksimal 3 foto per ulasan.');
+      files.forEach(validateImage);
+      setUploading(true);
+      for (const [index, file] of files.entries()) {
+        setProgress({ current: index + 1, total: files.length });
+        const result = await upload(file, 'review');
+        setPhotos((previous) => [...previous, result.url]);
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      photoLock.current = false;
+      setUploading(false);
+    }
+  }
   async function send(e) {
     e.preventDefault();
+    if (busy || photoLock.current) return;
     const values = new FormData(e.currentTarget);
     if (!rating) {
       setError('Pilih rating terlebih dahulu.');
@@ -31,6 +59,7 @@ export function ReviewPage() {
         body: {
           rating,
           text: values.get('text'),
+          photos,
           acknowledged: values.get('acknowledged') === 'on',
         },
       });
@@ -126,6 +155,52 @@ export function ReviewPage() {
                 placeholder="Ceritakan pengalaman komunikasimu."
               />
             </Field>
+            <section className="mt-7 rounded-xl border border-dashed border-line bg-warm p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm">
+                    Foto bukti <span className="font-normal text-muted">(opsional)</span>
+                  </h3>
+                  <p className="mt-1 text-xs!">
+                    JPG, PNG, atau WebP · maksimal 3 foto, 5 MB per foto.
+                  </p>
+                </div>
+                <Button
+                  kind="light"
+                  icon="upload"
+                  disabled={uploading || photos.length === 3}
+                  onClick={() => picker.current.click()}
+                >
+                  {uploading ? 'Mengunggah…' : 'Tambah foto'}
+                </Button>
+                <input
+                  ref={picker}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  hidden
+                  disabled={uploading || photos.length === 3}
+                  aria-label="Pilih foto bukti ulasan"
+                  onChange={(event) => {
+                    const files = Array.from(event.target.files);
+                    event.target.value = '';
+                    addPhotos(files);
+                  }}
+                />
+              </div>
+              <ReviewPhotos
+                photos={photos}
+                disabled={uploading || busy}
+                onRemove={(index) =>
+                  setPhotos((previous) => previous.filter((_, i) => i !== index))
+                }
+              />
+              <p className="mt-3 text-xs!" role={uploading ? 'status' : undefined}>
+                {uploading
+                  ? `Mengunggah foto ${progress.current} dari ${progress.total}…`
+                  : `${photos.length}/3 foto · Foto akan terlihat bersama ulasan. Hindari data pribadi.`}
+              </p>
+            </section>
             <label className="flex gap-[13px] items-start text-[12px] text-muted mt-7.5">
               <input required name="acknowledged" type="checkbox" />
               Saya memahami bahwa transaksi di WhatsApp belum diverifikasi JastipHub.
@@ -139,7 +214,7 @@ export function ReviewPage() {
               </p>
             )}
             <div className="actions flex flex-wrap items-center justify-end gap-3 mt-7 mobile:gap-2!">
-              <Button type="submit" icon="arrow">
+              <Button type="submit" icon="arrow" disabled={uploading}>
                 {busy ? 'Mengirim…' : 'Kirim Ulasan'}
               </Button>
             </div>

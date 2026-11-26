@@ -96,6 +96,11 @@ export const reviewInput = z
   .object({
     rating: z.number().int().min(1).max(5),
     text: text(1200, 'Ulasan'),
+    photos: z
+      .array(z.string().min(1).max(255))
+      .max(3, 'Maksimal 3 foto per ulasan.')
+      .refine((photos) => new Set(photos).size === photos.length, 'Foto tidak boleh duplikat.')
+      .default([]),
     acknowledged: z.literal(true, { error: 'Centang persetujuan ulasan.' }),
   })
   .strict();

@@ -36,6 +36,43 @@ export function Button({ to, kind = 'primary', icon, children, className = '', .
     </button>
   );
 }
+
+export function BackButton({
+  fallback = '/',
+  fallbackLabel = 'Explore',
+  className = '',
+  disabled = false,
+}) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  // React Router counts only entries inside this app, unlike history.length.
+  const canGoBack = window.history.state?.idx > 0;
+  const label = canGoBack ? 'Kembali' : 'Kembali ke ' + fallbackLabel;
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() =>
+        canGoBack ? navigate(-1) : navigate(fallback, { replace: true, state: location.state })
+      }
+      aria-label={canGoBack ? 'Kembali ke halaman sebelumnya' : label}
+      className={twMerge(
+        'group inline-flex min-h-11 items-center gap-2.5 rounded-full pr-3 text-sm font-semibold text-muted transition-colors hover:text-brand active:text-deep disabled:pointer-events-none mobile:text-xs',
+        className,
+      )}
+    >
+      <span className="grid size-9 shrink-0 place-items-center rounded-full border border-line bg-white transition-[background-color,border-color,transform] group-hover:border-brand/30 group-hover:bg-sage group-active:scale-95">
+        <Icon
+          name="chevron"
+          size={16}
+          className="rotate-180 transition-transform group-hover:-translate-x-0.5"
+        />
+      </span>
+      {label}
+    </button>
+  );
+}
+
 export function Dialog({ title, children, onClose, subtitle }) {
   const ref = useRef(null);
   useEffect(() => {

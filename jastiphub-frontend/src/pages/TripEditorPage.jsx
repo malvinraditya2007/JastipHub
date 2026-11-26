@@ -482,7 +482,7 @@ function EditorForm({ existing }) {
                 {t.stores.length} toko terjadwal
               </span>
               <Button icon="message" onClick={() => setModal('wa')}>
-                Chat Jastiper (preview)
+                Pratinjau Chat WhatsApp
               </Button>
             </div>
           </div>

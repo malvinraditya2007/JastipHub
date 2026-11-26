@@ -1,6 +1,8 @@
 # JastipHub
 
-JastipHub membantu pengguna mencari trip jastip, membuat trip sendiri, dan menghubungi jastiper lewat WhatsApp. Semua perintah dijalankan dari folder utama proyek, yaitu folder yang berisi `package.json`.
+JastipHub membantu pengguna mencari perjalanan jastip, melihat toko yang akan dikunjungi, dan menghubungi jastiper lewat WhatsApp. Pengguna juga bisa membuat trip sendiri, menyimpan trip favorit, serta memberi ulasan dengan foto.
+
+Semua perintah di panduan ini dijalankan dari folder utama proyek, yaitu folder yang berisi `package.json`.
 
 ## Persiapan pertama kali
 
@@ -20,7 +22,7 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
 
-Nilai `DB_...` diambil dari detail koneksi TiDB Cloud. Nilai `CLOUDINARY_...` diambil dari akun Cloudinary. Isi ketiga pengaturan Cloudinary agar foto profil dan cover trip disimpan di sana.
+Nilai `DB_...` diambil dari detail koneksi TiDB Cloud. Nilai `CLOUDINARY_...` diambil dari akun Cloudinary. Isi ketiga pengaturan Cloudinary agar foto profil, cover trip, dan foto ulasan disimpan di sana.
 
 File `.env` berisi informasi pribadi untuk mengakses layanan tersebut. File ini sudah diabaikan Git; `.env.example` hanya berisi contoh isian kosong.
 
@@ -33,15 +35,40 @@ npm run dev
 
 `npm ci` memasang paket yang diperlukan proyek. Setelah pemasangan dan pengaturan awal selesai, untuk menjalankan aplikasi lagi cukup gunakan `npm run dev`.
 
+Saat aplikasi mulai berjalan, tabel database yang belum ada dibuat otomatis dari `001_initial.sql`. Jadi, untuk langkah di atas kamu tidak perlu menjalankan `npm run db:init` terpisah. Perintah itu disediakan jika ingin menyiapkan tabel tanpa menyalakan aplikasi.
+
 Buka **<http://127.0.0.1:5173>**. Frontend dan backend berjalan dari alamat yang sama. Port `5173` sudah menjadi bawaan, jadi `.env` cukup berisi tujuh pengaturan di atas untuk setup ini.
 
 Hentikan aplikasi dengan `Ctrl+C` di terminal. Setelah mengubah `.env`, hentikan lalu jalankan kembali aplikasinya. Jika PowerShell menolak perintah `npm`, gunakan `npm.cmd`.
 
+## Cara menggunakan aplikasi
+
+1. **Cari trip** di Explore. Gunakan pencarian, pilihan negara, tanggal, dan urutan hasil sesuai kebutuhan. Daftar toko pada kartu ditampilkan satu baris dengan tombol panah, maksimal lima nama dan penanda jumlah toko lainnya.
+2. **Buat akun dan masuk** untuk menyimpan trip atau menghubungi jastiper. Simpan kode pemulihan yang diberikan saat daftar untuk dipakai jika lupa password. Kode tersebut diganti dengan kode baru setelah digunakan.
+3. **Hubungi jastiper** dari detail trip melalui **Chat via WhatsApp**, lalu **Buka WhatsApp**. Riwayat permintaan kontak bisa dilihat di halaman Profil.
+4. **Buat trip sendiri** melalui **Buat Trip**. Isi tujuan, jadwal, toko, dan fee, lalu simpan sebagai draf atau publikasikan. Trip buatanmu dan trip favorit ada di **My Trips**.
+
+Foto profil boleh dikosongkan; aplikasi akan menampilkan inisial nama dengan warna yang bisa dipilih. Cover trip yang belum diunggah akan memakai gambar destinasi otomatis.
+
+Tombol **Kembali** tersedia di halaman akun dan halaman lanjutan. Jika halaman dibuka langsung, tombol mengarah ke halaman yang sesuai, misalnya Explore, Login, atau My Trips.
+
+### Memberi ulasan dan foto bukti
+
+Ulasan tersedia dari riwayat kontak di halaman Profil setelah trip selesai. Pengguna harus sudah masuk dan pernah membuka kontak WhatsApp trip tersebut. Setiap akun hanya bisa memberi satu ulasan per trip dan tidak bisa mengulas trip miliknya sendiri.
+
+Rating 1–5 bintang menilai pengalaman komunikasi dan kejelasan biaya jastiper. Rating di profil jastiper merupakan rata-rata ulasan yang diterima.
+
+Foto bukti bersifat opsional, maksimal tiga foto per ulasan. Foto bisa diperbesar atau dihapus sebelum ulasan dikirim, lalu tampil bersama ulasan di profil jastiper. Foto yang sudah tampil juga bisa dibuka dalam ukuran penuh.
+
+Percakapan, pembayaran, dan kesepakatan dilakukan langsung lewat WhatsApp. Aplikasi mencatat permintaan membuka kontak. Ulasan dan foto merupakan keterangan pengguna; transaksi tidak diperiksa otomatis oleh aplikasi.
+
+Jika memakai MySQL lokal dengan pengaturan yang didukung, reset password juga dapat dibuka lewat `jastiphub-backend/storage/.jastiphub-local.html`. Penggunaan TiDB Cloud memakai kode pemulihan dari halaman daftar.
+
 ## Foto dan gambar
 
-Foto profil dan cover yang diunggah disimpan di Cloudinary jika ketiga pengaturannya diisi. Kalau semuanya kosong, backend menyimpan foto di folder lokal `jastiphub-backend/storage/uploads/`. Mengisi hanya sebagian pengaturan Cloudinary akan membuat backend menolak mulai berjalan.
+Foto profil, cover trip, dan foto ulasan disimpan di Cloudinary jika ketiga pengaturannya diisi. Kalau semuanya kosong, backend menyimpan foto di folder lokal `jastiphub-backend/storage/uploads/`. Mengisi hanya sebagian pengaturan Cloudinary akan membuat backend menolak mulai berjalan.
 
-Saat Cloudinary aktif, folder upload lokal tidak dibuat. Foto lokal lama yang masih ada tetap bisa dibuka. Upload mendukung JPG, PNG, dan WebP, maksimal 5 MB.
+Saat Cloudinary aktif, folder upload lokal tidak dibuat. Foto lokal lama yang masih ada tetap bisa dibuka. Upload mendukung JPG, PNG, dan WebP, maksimal 5 MB per foto. Foto ulasan diperkecil bila perlu tanpa memotong isinya.
 
 Gambar bawaan aplikasi ada di `jastiphub-frontend/public/art/`, misalnya logo, bendera, ikon, dan cover destinasi. Ubah gambar bawaan di folder ini.
 
@@ -79,7 +106,7 @@ JastipHub/
         init.js                   # Menyiapkan tabel database
         repositories/             # Membaca dan menyimpan data
         migrations/
-          001_initial.sql         # Susunan tabel lengkap, termasuk username dan warna avatar
+          001_initial.sql         # Susunan tabel lengkap, termasuk foto ulasan
 
   jastiphub-frontend/
     index.html                    # Halaman awal yang memuat aplikasi
@@ -90,7 +117,10 @@ JastipHub/
       data.js                     # Pilihan negara, cover, dan format tampilan
       images.js                   # Memeriksa gambar sebelum diunggah
       pages/                      # Halaman login, Explore, profil, dan trip
-      components/                 # Tombol, kartu, dialog, avatar, dan bagian UI
+      components/                 # Bagian tampilan yang dipakai bersama
+        Layout.jsx                # Bagian atas halaman dan navigasi
+        UI.jsx                    # Tombol, dialog, tampilan loading, dan tombol kembali
+        ReviewPhotos.jsx          # Foto ulasan dan tampilan saat diperbesar
       services/
         api.js                    # Mengirim permintaan ke backend
         store.jsx                 # Data akun dan aksi yang dipakai bersama
@@ -104,16 +134,6 @@ JastipHub/
       assets/                     # JavaScript, CSS, dan font hasil build
       art/                        # Salinan gambar dari public/art/
 ```
-
-## Akun dan penggunaan
-
-Buat akun lewat halaman **Daftar**, lalu masuk dengan username dan password. Simpan kode pemulihan yang diberikan saat daftar untuk dipakai jika lupa password. Setelah dipakai, kode tersebut diganti dengan kode baru.
-
-Foto profil boleh dikosongkan; aplikasi akan menampilkan inisial nama. Cover trip yang belum diunggah akan memakai gambar destinasi otomatis.
-
-Untuk MySQL lokal, reset password juga dapat dibuka lewat `jastiphub-backend/storage/.jastiphub-local.html` pada pengaturan lokal yang didukung. Penggunaan TiDB Cloud memakai kode pemulihan dari halaman daftar.
-
-JastipHub mengarahkan percakapan ke WhatsApp. Pembayaran dan kesepakatan dilakukan langsung dengan jastiper, dan transaksi tersebut tidak diperiksa otomatis oleh aplikasi.
 
 ## Build untuk hosting
 
@@ -134,7 +154,7 @@ Saat dipasang di hosting, tambahkan `NODE_ENV=production` dan isi `APP_ORIGIN` d
 | ---------------------- | -------------------------------------------------------- |
 | `npm ci`               | Memasang paket proyek dari daftar versi yang tersimpan   |
 | `npm run dev`          | Menjalankan aplikasi selama pengembangan                 |
-| `npm run db:init`      | Opsional: menyiapkan tabel tanpa menyalakan aplikasi     |
+| `npm run db:init`      | Menyiapkan tabel tanpa menyalakan aplikasi               |
 | `npm run build`        | Membuat versi siap hosting ke folder `dist/`             |
 | `npm start`            | Menjalankan aplikasi dari hasil build                    |
 | `npm run lint`         | Mencari masalah kode, termasuk import yang tidak dipakai |

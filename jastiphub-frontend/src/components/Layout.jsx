@@ -4,7 +4,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useApp } from '../services/store';
 import { Art, Icon } from './Art';
 import { Avatar } from './Avatar';
-import { Button, Dialog } from './UI';
+import { BackButton, Button, Dialog } from './UI';
 export function Brand() {
   return (
     <Link
@@ -65,6 +65,8 @@ export function Layout() {
     pathname.startsWith('/jastiper/');
   const activeMine =
     pathname === '/my-trips' || pathname.includes('/edit') || pathname === '/trips/baru';
+  const backToMine = pathname === '/trips/baru' || /^\/trips\/[^/]+\/edit$/.test(pathname);
+  const backToProfile = pathname.startsWith('/ulasan/');
   return (
     <>
       <header className="[background:white] relative z-[2]">
@@ -104,6 +106,17 @@ export function Layout() {
           </div>
         </div>
       </header>
+      {pathname !== '/' && (
+        <nav
+          aria-label="Navigasi kembali"
+          className="w-[min(88.6%,_1240px)] mx-auto pt-5 -mb-5 tablet:w-[92%]! mobile:pt-3! mobile:-mb-4!"
+        >
+          <BackButton
+            fallback={backToMine ? '/my-trips' : backToProfile ? '/profile' : '/'}
+            fallbackLabel={backToMine ? 'My Trips' : backToProfile ? 'profil' : 'Explore'}
+          />
+        </nav>
+      )}
       <Outlet />
       {how && <How close={() => setHow(false)} />}
     </>

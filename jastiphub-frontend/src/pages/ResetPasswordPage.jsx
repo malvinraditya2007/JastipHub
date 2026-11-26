@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { Brand } from '../components/Layout';
 import { RecoveryDialog } from '../components/RecoveryDialog';
-import { Button, Field, Loading, RequestError } from '../components/UI';
+import { BackButton, Button, Field, Loading, RequestError } from '../components/UI';
 import { request } from '../services/api';
 import { useApp } from '../services/store';
 export function ResetPasswordPage() {
@@ -15,6 +15,8 @@ export function ResetPasswordPage() {
     setMessage,
   } = useApp();
   const nav = useNavigate();
+  const location = useLocation();
+  const login = '/login' + location.search;
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [recovery, setRecovery] = useState('');
@@ -32,8 +34,9 @@ export function ResetPasswordPage() {
       await boot();
       if (localPasswordReset) {
         setMessage(result.message);
-        nav('/login', {
+        nav(login, {
           replace: true,
+          state: location.state,
         });
       } else {
         setRecovery(result.recoveryCode);
@@ -47,7 +50,10 @@ export function ResetPasswordPage() {
   }
   return (
     <main className="w-[min(88.6%,_1240px)] [margin-inline:auto] pt-[49px] pb-14.5 tablet:w-[92%]! mobile:pt-7! max-w-190">
-      <Brand />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <BackButton fallback={login} fallbackLabel="Login" disabled={busy} />
+        <Brand />
+      </div>
       <div className="rounded-2xl border border-line bg-white overflow-hidden p-7.5 mt-7.5 [&_form]:grid [&_form]:gap-5 [&_form]:mt-[25px]">
         <h1 className="mobile:text-[30px]!">Atur ulang password</h1>
         {!ready ? (
@@ -94,9 +100,6 @@ export function ResetPasswordPage() {
                 </p>
               )}
               <div className="actions flex flex-wrap items-center justify-end gap-3 mt-7 mobile:gap-2!">
-                <Button kind="light" to="/login">
-                  Kembali ke Login
-                </Button>
                 <Button type="submit" disabled={busy || needsLocalLauncher}>
                   {busy ? 'Memproses…' : 'Simpan password baru'}
                 </Button>
@@ -109,8 +112,9 @@ export function ResetPasswordPage() {
         <RecoveryDialog
           code={recovery}
           onContinue={() =>
-            nav('/login', {
+            nav(login, {
               replace: true,
+              state: location.state,
             })
           }
         />

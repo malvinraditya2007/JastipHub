@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { Art, Icon } from '../components/Art';
 import { Brand } from '../components/Layout';
 import { RecoveryDialog } from '../components/RecoveryDialog';
-import { Button, Field, Loading, RequestError } from '../components/UI';
+import { BackButton, Button, Field, Loading, RequestError } from '../components/UI';
 import { request } from '../services/api';
 import { useApp } from '../services/store';
 export function AuthPage({ register = false }) {
@@ -113,7 +113,14 @@ export function AuthPage({ register = false }) {
         )}
       </aside>
       <section className="auth-main py-[clamp(45px,_7.5vw,_108px)] px-[clamp(25px,_8.5vw,_120px)] self-center [&_h1]:text-[31px] [&_h1]:mt-16 [&_form]:grid [&_form]:gap-6.5 [&_form]:mt-13 [&_form]:py-3.5 [&_form]:px-5.5 [&_.forgot]:[justify-self:end] laptop-fit:[padding-block:clamp(18px,_3svh,_32px)]! laptop-fit:[&_form]:mt-[clamp(16px,_3svh,_32px)]! laptop-fit:[&_form]:gap-[clamp(10px,_2svh,_18px)]! laptop-fit:[&_form]:[padding-block:0]! laptop-fit:[&_.field]:gap-[clamp(4px,_0.85svh,_8px)]! laptop-fit:[&_.field_input]:[padding-block:clamp(8px,_1.25svh,_12px)]! tablet:[padding-inline:7%]! tablet:[&_form]:[padding-inline:0]! mobile:py-7! mobile:px-[6%]! mobile:[&_h1]:text-[28px]! mobile:[&_h1]:mt-5! mobile:[&_form]:mt-5! mobile:[&_form]:gap-4.5! mobile:[&_.brand_.art]:w-[29px]! mobile:[&_.brand_.art]:h-[29px]!">
-        {!register && <Brand />}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <BackButton
+            fallback={register ? '/login' + loc.search : '/'}
+            fallbackLabel={register ? 'Login' : 'Explore'}
+            disabled={busy}
+          />
+          {!register && <Brand />}
+        </div>
         <h1 className="mobile:text-[30px]!">
           {register ? 'Buat akun JastipHub' : 'Selamat datang lagi.'}
         </h1>
@@ -177,7 +184,8 @@ export function AuthPage({ register = false }) {
             {!register && (
               <Link
                 className="forgot inline-flex items-center gap-2 text-brand font-bold text-left text-[13px] [&:hover]:[text-decoration:underline]"
-                to="/reset-password"
+                to={'/reset-password' + loc.search}
+                state={loc.state}
               >
                 Lupa password?
               </Link>

@@ -61,49 +61,52 @@ export function TripDetailPage() {
           className="rounded-[16px] min-h-97.5 tablet:min-h-80! mobile:min-h-0! mobile:aspect-[1.91]!"
           alt={place(t)}
         />
-        <aside className="rounded-2xl border border-line bg-white overflow-hidden pt-6.5 px-6 pb-[21px] min-h-[429px] [&_hr]:mt-[17px] [&_hr]:mx-0 [&_hr]:mb-5 [&_.avatar]:w-[49px] [&_.avatar]:h-[49px] [&_>_.btn]:w-full [&_>_.btn]:min-h-12 [&_.hint_+_.hint]:mt-[3px] mobile:min-h-0! mobile:p-5!">
+        <aside className="rounded-2xl border border-line bg-white overflow-hidden p-6 mobile:p-5!">
           <h4>Fee jastip per barang</h4>
           <div className="fee-line flex items-center gap-[13px] text-[14px] text-muted mt-3.5 [&_strong]:text-[40px] [&_strong]:text-brand [&_strong]:leading-[1.2] tablet:flex-wrap! mobile:[&_strong]:text-[34px]!">
             <strong>{fee(t)}</strong>
             {t.type === 'percentage' ? 'dari harga barang' : 'per barang'}
           </div>
-          <hr />
-          <div className="inline-person flex items-center gap-3 [&_small]:flex [&_small]:items-center [&_small]:gap-[5px]">
+          <hr className="my-5" />
+          <Link
+            className="group flex items-center gap-3 rounded-xl py-1 text-left"
+            to={'/jastiper/' + p.id}
+          >
             <Avatar
               src={p.avatar}
               name={p.name}
               color={p.avatarColor}
-              className="avatar w-10.5 h-10.5 rounded-[50%] flex-none [&.large]:w-18 [&.large]:h-18 [&.giant]:w-[125px] [&.giant]:h-[125px] mobile:[&.giant]:w-18! mobile:[&.giant]:h-18!"
+              className="size-12 shrink-0 rounded-full"
             />
-            <div>
-              <h3>{p.name}</h3>
-              <small>
+            <div className="min-w-0 flex-1">
+              <h3 className="break-words text-base leading-snug">{p.name}</h3>
+              <small className="mt-1 flex items-center gap-1.5">
                 <Icon name="star" size={17} /> {p.rating || '—'} · {p.count} ulasan
               </small>
+              <span className="mt-1.5 block text-xs font-bold text-brand group-hover:underline">
+                Profil &amp; ulasan jastiper
+              </span>
             </div>
-          </div>
-          <Link
-            className="inline-flex items-center gap-2 text-brand font-bold text-left text-[13px] [&:hover]:[text-decoration:underline]"
-            to={'/jastiper/' + p.id}
-          >
-            Profil &amp; ulasan jastiper <Icon name="chevron" size={16} />
+            <Icon name="chevron" size={18} className="shrink-0 text-brand" />
           </Link>
           {own ? (
-            <Button icon="edit" to={'/trips/' + t.id + '/edit'}>
+            <Button className="mt-5 min-h-12 w-full" icon="edit" to={'/trips/' + t.id + '/edit'}>
               Edit Trip
             </Button>
           ) : (
-            <Button icon="message" onClick={() => openChat()}>
+            <Button className="mt-5 min-h-12 w-full" icon="message" onClick={() => openChat()}>
               Chat via WhatsApp
             </Button>
           )}
-          <p className="hint text-[12px] mt-3.5 [&_.icon]:mr-[9px]">
-            <Icon name="shield" />
-            Login wajib agar permintaan kontak tercatat.
-          </p>
-          <p className="hint text-[12px] mt-3.5 [&_.icon]:mr-[9px]">
-            Transaksi diatur langsung via WhatsApp.
-          </p>
+          <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-sage p-3">
+            <Icon name="shield" size={18} className="mt-0.5 shrink-0 text-brand" />
+            <div className="min-w-0 space-y-1">
+              <p className="text-xs leading-relaxed">
+                Login wajib agar permintaan kontak tercatat.
+              </p>
+              <p className="text-xs leading-relaxed">Transaksi diatur langsung via WhatsApp.</p>
+            </div>
+          </div>
         </aside>
       </div>
       <section className="mt-[51px] mx-0 mb-15 [&_p]:mt-4.5 [&_p]:max-w-150 mobile:my-7.5! mobile:mx-0!">

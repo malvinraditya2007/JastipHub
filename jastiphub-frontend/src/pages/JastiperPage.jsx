@@ -4,6 +4,7 @@ import { Icon } from '../components/Art';
 import { Avatar } from '../components/Avatar';
 import { CompactTripCard } from '../components/CompactTripCard';
 import { Report } from '../components/TripDialogs';
+import { ReviewPhotos } from '../components/ReviewPhotos';
 import { Empty, Head, Pagination, ResourceState } from '../components/UI';
 import { useResource } from '../services/store';
 export function JastiperPage() {
@@ -113,7 +114,10 @@ export function JastiperPage() {
                       </small>
                     </div>
                   </div>
-                  <span>“{r.text}”</span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] break-words text-ink">“{r.text}”</p>
+                    <ReviewPhotos photos={r.photos} />
+                  </div>
                 </div>
               ))
             ) : (

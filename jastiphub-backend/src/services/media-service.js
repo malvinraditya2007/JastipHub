@@ -12,6 +12,7 @@ export async function assertOwnedMedia(repositories, url, userId, purpose, previ
   if (!media) {
     throw new ApiError(422, 'INVALID_MEDIA', 'Foto tidak tersedia atau bukan milik akunmu.');
   }
+  return media;
 }
 
 export function createMediaService(repositories, config) {
@@ -19,7 +20,7 @@ export function createMediaService(repositories, config) {
   return {
     async upload(userId, file, purpose) {
       if (
-        !['avatar', 'cover'].includes(purpose) ||
+        !['avatar', 'cover', 'review'].includes(purpose) ||
         !file ||
         !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)
       ) {
@@ -41,14 +42,16 @@ export function createMediaService(repositories, config) {
         if (!['jpeg', 'png', 'webp'].includes(metadata.format) || (metadata.pages || 1) > 1) {
           throw new Error('Unsupported image');
         }
-        output = await image
-          .rotate()
-          .resize(purpose === 'avatar' ? 240 : 1100, purpose === 'avatar' ? 240 : 619, {
+        image.rotate();
+        if (purpose === 'review') {
+          image.resize(1400, 1400, { fit: 'inside', withoutEnlargement: true });
+        } else {
+          image.resize(purpose === 'avatar' ? 240 : 1100, purpose === 'avatar' ? 240 : 619, {
             fit: 'cover',
             withoutEnlargement: true,
-          })
-          .webp({ quality: 83 })
-          .toBuffer();
+          });
+        }
+        output = await image.webp({ quality: 83 }).toBuffer();
       } catch {
         throw new ApiError(
           422,

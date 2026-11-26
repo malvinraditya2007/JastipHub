@@ -97,6 +97,23 @@ export function reviewRepository(query) {
         [review.id, review.authorId, review.tripId, review.rating, review.text],
       );
     },
+    addPhoto(reviewId, mediaId, position) {
+      return query('INSERT INTO review_photos (review_id, media_id, position) VALUES (?, ?, ?)', [
+        reviewId,
+        mediaId,
+        position,
+      ]);
+    },
+    photosForReviews(ids) {
+      if (!ids.length) return [];
+      return query(
+        `SELECT review_photos.review_id, media.filename
+         FROM review_photos JOIN media ON media.id = review_photos.media_id
+         WHERE review_photos.review_id IN (${ids.map(() => '?').join(',')})
+         ORDER BY review_photos.position`,
+        ids,
+      );
+    },
   };
 }
 

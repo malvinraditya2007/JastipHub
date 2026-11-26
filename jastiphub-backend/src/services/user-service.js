@@ -45,12 +45,22 @@ export function createUserService(repositories) {
         this.getProfile(ownerId),
         repositories.reviews.listForOwner(ownerId, pagination),
       ]);
+      const photos = await repositories.reviews.photosForReviews(rows.map((review) => review.id));
+      const photosByReview = new Map();
+      for (const photo of photos) {
+        const list = photosByReview.get(photo.review_id) || [];
+        list.push(
+          photo.filename.startsWith('https://') ? photo.filename : '/uploads/' + photo.filename,
+        );
+        photosByReview.set(photo.review_id, list);
+      }
       return {
         data: rows.map((review) => ({
           id: review.id,
           tripId: review.trip_id,
           rating: review.rating,
           text: review.text,
+          photos: photosByReview.get(review.id) || [],
           createdAt: review.created_at,
           city: review.city,
           author: {

@@ -6,6 +6,78 @@ import { Avatar } from '../components/Avatar';
 import { countries, countryKey, fee, place, range } from '../data';
 import { Button, Empty, useSave, ResourceState, Pagination } from '../components/UI';
 import { useResource } from '../services/store';
+
+function StoreList({ stores }) {
+  const rail = useRef(null);
+  const [scroll, setScroll] = useState({ left: false, right: false });
+  useEffect(() => {
+    const list = rail.current;
+    function updateScroll() {
+      const left = list.scrollLeft > 1;
+      const right = list.scrollLeft + list.clientWidth < list.scrollWidth - 1;
+      setScroll((previous) =>
+        previous.left === left && previous.right === right ? previous : { left, right },
+      );
+    }
+    const resize = new ResizeObserver(updateScroll);
+    resize.observe(list);
+    for (const item of list.children) resize.observe(item);
+    list.addEventListener('scroll', updateScroll, { passive: true });
+    updateScroll();
+    return () => {
+      resize.disconnect();
+      list.removeEventListener('scroll', updateScroll);
+    };
+  }, [stores]);
+  function move(direction) {
+    const list = rail.current;
+    list.scrollBy({ left: direction * list.clientWidth * 0.8 });
+  }
+  const overflow = scroll.left || scroll.right;
+  const arrowClass =
+    'grid size-7 shrink-0 place-items-center rounded-full border border-line bg-white text-ink hover:bg-sage';
+  return (
+    <div className="flex min-w-0 items-center gap-1.5 mt-1 min-h-7 [&_span]:shrink-0 [&_span]:whitespace-nowrap [&_span]:py-[5px] [&_span]:px-2.5 [&_span]:rounded-[24px] [&_span]:[background:#f0f0f4] [&_span]:text-[11px] [&_span]:leading-[1.3] narrow:[&_span]:text-[10px]! mobile:[&_span]:text-[11px]!">
+      {overflow && (
+        <button
+          type="button"
+          className={arrowClass}
+          aria-label="Geser toko ke kiri"
+          disabled={!scroll.left}
+          onClick={() => move(-1)}
+        >
+          <Icon name="chevron" size={14} className="rotate-180" />
+        </button>
+      )}
+      <div
+        ref={rail}
+        className="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="region"
+        aria-label="Daftar toko"
+        tabIndex={0}
+      >
+        {stores.slice(0, 5).map((store) => (
+          <span key={store}>{store}</span>
+        ))}
+      </div>
+      {overflow && (
+        <button
+          type="button"
+          className={arrowClass}
+          aria-label="Geser toko ke kanan"
+          disabled={!scroll.right}
+          onClick={() => move(1)}
+        >
+          <Icon name="chevron" size={14} />
+        </button>
+      )}
+      {stores.length > 5 && (
+        <span aria-label={`${stores.length - 5} toko lainnya`}>+{stores.length - 5}</span>
+      )}
+    </div>
+  );
+}
+
 function TripCard({ trip: t }) {
   const save = useSave();
   const p = t.person;
@@ -64,12 +136,7 @@ function TripCard({ trip: t }) {
             <Icon name="store" size={15} />
             Toko yang akan dikunjungi
           </small>
-          <div className="flex items-center gap-1.5 flex-wrap mt-1 [&_span]:py-[5px] [&_span]:px-2.5 [&_span]:rounded-[24px] [&_span]:[background:#f0f0f4] [&_span]:text-[11px] [&_span]:leading-[1.3] narrow:[&_span]:text-[10px]! mobile:[&_span]:text-[11px]!">
-            {t.stores.slice(0, 3).map((s) => (
-              <span key={s}>{s}</span>
-            ))}
-            {t.stores.length > 3 && <span>+{t.stores.length - 3}</span>}
-          </div>
+          <StoreList stores={t.stores} />
         </div>
         <Button
           className="w-[calc(100%_+_8px)] ml-[-4px] min-h-[37px] p-[7px]"
@@ -310,25 +377,33 @@ export function ExplorePage() {
             })
           }
         />
-        <div className="flex justify-between items-center gap-4 mt-4 mx-0 mb-2 [&_h2]:text-[25px] [&_p]:text-[13px] [&_label]:flex [&_label]:items-center [&_label]:gap-4 [&_label]:text-[12px] [&_label]:text-muted [&_select]:rounded-[8px] [&_select]:py-[9px] [&_select]:px-3 [&_select]:text-[13px] [&_select]:min-w-41 [&_select]:font-[650] mobile:items-start! mobile:flex-col! mobile:gap-2! mobile:[&_h2]:text-[24px]! mobile:[&_p]:text-[12px]! mobile:[&_label]:self-end! mobile:[&_label]:gap-2! mobile:[&_select]:text-[12px]! mobile:[&_select]:py-[5px]! mobile:[&_select]:px-[9px]! mobile:[&_select]:min-w-0!">
+        <div className="flex justify-between items-center gap-4 mt-4 mx-0 mb-3 [&_h2]:text-[25px] [&_p]:text-[13px] mobile:items-start! mobile:flex-col! mobile:gap-3! mobile:[&_h2]:text-[24px]! mobile:[&_p]:text-[12px]!">
           <div>
             <h2 className="mobile:text-[22px]!">Trip Mendatang</h2>
             <p>Jelajahi trip dari jastiper yang akan segera mengunjungi toko favoritmu.</p>
           </div>
-          <label>
-            Urutkan{' '}
-            <select
-              value={sort}
-              onChange={(e) =>
-                update({
-                  sort: e.target.value,
-                })
-              }
-            >
-              <option value="soon">Segera Berangkat</option>
-              <option value="latest">Terakhir Berangkat</option>
-              <option value="rating">Rating Tertinggi</option>
-            </select>
+          <label className="group inline-flex shrink-0 items-center gap-2.5 text-xs font-medium text-muted mobile:self-end! mobile:gap-2!">
+            <span>Urutkan</span>
+            <span className="relative block">
+              <select
+                className="h-10 w-48 appearance-none rounded-xl border border-line bg-white py-2 pl-3.5 pr-10 text-[13px] font-semibold text-ink transition-colors hover:border-brand/40 focus:border-brand mobile:w-46! mobile:text-xs!"
+                value={sort}
+                onChange={(e) =>
+                  update({
+                    sort: e.target.value,
+                  })
+                }
+              >
+                <option value="soon">Segera Berangkat</option>
+                <option value="latest">Terakhir Berangkat</option>
+                <option value="rating">Rating Tertinggi</option>
+              </select>
+              <Icon
+                name="down"
+                size={14}
+                className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 opacity-70 transition-opacity group-hover:opacity-100"
+              />
+            </span>
           </label>
         </div>
         {(search || day || country) && (

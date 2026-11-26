@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS media (
   id VARCHAR(36) COLLATE utf8mb4_bin NOT NULL PRIMARY KEY,
   owner_id VARCHAR(36) COLLATE utf8mb4_bin NOT NULL,
-  purpose VARCHAR(10) NOT NULL CHECK (purpose IN ('avatar', 'cover')),
+  purpose VARCHAR(10) NOT NULL CHECK (purpose IN ('avatar', 'cover', 'review')),
   filename VARCHAR(255) COLLATE utf8mb4_bin NOT NULL UNIQUE,
   size INT NOT NULL CHECK (size >= 0),
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -106,6 +106,17 @@ CREATE TABLE IF NOT EXISTS reviews (
   FOREIGN KEY (author_id, trip_id) REFERENCES trip_contacts(user_id, trip_id),
   UNIQUE (author_id, trip_id),
   INDEX reviews_trip (trip_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS review_photos (
+  review_id VARCHAR(36) COLLATE utf8mb4_bin NOT NULL,
+  media_id VARCHAR(36) COLLATE utf8mb4_bin NOT NULL,
+  position TINYINT NOT NULL CHECK (position BETWEEN 0 AND 2),
+  PRIMARY KEY (review_id, media_id),
+  UNIQUE (review_id, position),
+  FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE,
+  FOREIGN KEY (media_id) REFERENCES media(id),
+  INDEX review_photos_media (media_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS reports (
