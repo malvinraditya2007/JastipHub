@@ -46,17 +46,9 @@ export function userRepository(query, transactional = false) {
 
     create(user) {
       return query(
-        `INSERT INTO users (id, name, handle, handle_key, password_hash, recovery_hash, phone)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          user.id,
-          user.name,
-          user.handle,
-          usernameKey(user.handle),
-          user.passwordHash,
-          user.recoveryHash,
-          user.phone,
-        ],
+        `INSERT INTO users (id, name, handle, handle_key, password_hash, phone)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [user.id, user.name, user.handle, usernameKey(user.handle), user.passwordHash, user.phone],
       );
     },
 
@@ -74,14 +66,6 @@ export function userRepository(query, transactional = false) {
           profile.avatarColor,
           id,
         ],
-      );
-    },
-
-    updateCredentials(id, passwordHash, recoveryHash) {
-      return query(
-        `UPDATE users SET password_hash = ?, recovery_hash = ?,
-         updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-        [passwordHash, recoveryHash, id],
       );
     },
   };

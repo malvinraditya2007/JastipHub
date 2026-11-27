@@ -18,9 +18,6 @@ export function configuration(env = process.env) {
     throw new Error('DB_PORT harus nomor port antara 1 dan 65535.');
   const databaseSsl = env.DB_SSL ?? 'true';
   if (!['true', 'false'].includes(databaseSsl)) throw new Error('DB_SSL harus true atau false.');
-  const localDatabase = ['localhost', '127.0.0.1', '::1'].includes(databaseHost);
-  const localPasswordReset =
-    !production && localDatabase && host === '127.0.0.1' && origin === `http://127.0.0.1:${port}`;
   if (production && !origin.startsWith('https://'))
     throw new Error('APP_ORIGIN production wajib HTTPS.');
   const cookieSameSite = env.COOKIE_SAME_SITE || 'lax';
@@ -47,10 +44,8 @@ export function configuration(env = process.env) {
     host,
     origin,
     cookieSameSite,
-    localPasswordReset,
     trustProxy: Number(env.TRUST_PROXY || 0),
     uploadDir: resolve(projectRoot, env.UPLOAD_DIR || 'storage/uploads'),
-    runtimeDir: resolve(projectRoot, 'storage'),
     cloudinary: cloudinaryValues.every(Boolean) ? cloudinary : null,
     database: {
       host: databaseHost,

@@ -24,10 +24,6 @@ export function sessionRepository(query) {
       return query('DELETE FROM sessions WHERE token_hash = ?', [tokenHash]);
     },
 
-    deleteByUser(userId) {
-      return query('DELETE FROM sessions WHERE user_id = ?', [userId]);
-    },
-
     deleteExpired() {
       return query(`DELETE FROM sessions WHERE expires_at <= ${now}`);
     },

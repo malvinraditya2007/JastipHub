@@ -4,12 +4,10 @@ const picture = {
   logo: ['explore-JastipHubImportedAirplaneLogo', 165.03, 148.21, -33.21, -19.78],
   hero: ['explore-HeroPhotoImportedBackgroundOnly', 100, 149.07, 0, -7.22],
   login: ['login-OriginalJapaneseTravelStillLife'],
-  register: ['register-ShoppingToteStillLife', 141.86, 137.14, -32.99, -35.71],
 };
 const imageRatios = {
   'explore-JastipHubImportedAirplaneLogo': 1312 / 1199,
   'explore-HeroPhotoImportedBackgroundOnly': 2175 / 723,
-  'register-ShoppingToteStillLife': 1376 / 768,
 };
 export function Art({
   name,

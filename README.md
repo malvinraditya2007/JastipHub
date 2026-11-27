@@ -35,7 +35,7 @@ npm run dev
 
 `npm ci` memasang paket yang diperlukan proyek. Setelah pemasangan dan pengaturan awal selesai, untuk menjalankan aplikasi lagi cukup gunakan `npm run dev`.
 
-Saat aplikasi mulai berjalan, tabel database yang belum ada dibuat otomatis dari `001_initial.sql`. Jadi, untuk langkah di atas kamu tidak perlu menjalankan `npm run db:init` terpisah. Perintah itu disediakan jika ingin menyiapkan tabel tanpa menyalakan aplikasi.
+Saat aplikasi mulai berjalan, tabel database disiapkan otomatis melalui migration di `jastiphub-backend/src/database/migrations/`. Jadi, untuk langkah di atas kamu tidak perlu menjalankan `npm run db:init` terpisah. Perintah itu disediakan jika ingin menyiapkan tabel tanpa menyalakan aplikasi.
 
 Buka **<http://127.0.0.1:5173>**. Frontend dan backend berjalan dari alamat yang sama. Port `5173` sudah menjadi bawaan, jadi `.env` cukup berisi tujuh pengaturan di atas untuk setup ini.
 
@@ -44,7 +44,7 @@ Hentikan aplikasi dengan `Ctrl+C` di terminal. Setelah mengubah `.env`, hentikan
 ## Cara menggunakan aplikasi
 
 1. **Cari trip** di Explore. Gunakan pencarian, pilihan negara, tanggal, dan urutan hasil sesuai kebutuhan. Daftar toko pada kartu ditampilkan satu baris dengan tombol panah, maksimal lima nama dan penanda jumlah toko lainnya.
-2. **Buat akun dan masuk** untuk menyimpan trip atau menghubungi jastiper. Simpan kode pemulihan yang diberikan saat daftar untuk dipakai jika lupa password. Kode tersebut diganti dengan kode baru setelah digunakan.
+2. **Buat akun dan masuk** untuk menyimpan trip atau menghubungi jastiper.
 3. **Hubungi jastiper** dari detail trip melalui **Chat via WhatsApp**, lalu **Buka WhatsApp**. Riwayat permintaan kontak bisa dilihat di halaman Profil.
 4. **Buat trip sendiri** melalui **Buat Trip**. Isi tujuan, jadwal, toko, dan fee, lalu simpan sebagai draf atau publikasikan. Trip buatanmu dan trip favorit ada di **My Trips**.
 
@@ -61,8 +61,6 @@ Rating 1–5 bintang menilai pengalaman komunikasi dan kejelasan biaya jastiper.
 Foto bukti bersifat opsional, maksimal tiga foto per ulasan. Foto bisa diperbesar atau dihapus sebelum ulasan dikirim, lalu tampil bersama ulasan di profil jastiper. Foto yang sudah tampil juga bisa dibuka dalam ukuran penuh.
 
 Percakapan, pembayaran, dan kesepakatan dilakukan langsung lewat WhatsApp. Aplikasi mencatat permintaan membuka kontak. Ulasan dan foto merupakan keterangan pengguna; transaksi tidak diperiksa otomatis oleh aplikasi.
-
-Jika memakai MySQL lokal dengan pengaturan yang didukung, reset password juga dapat dibuka lewat `jastiphub-backend/storage/.jastiphub-local.html`. Penggunaan TiDB Cloud memakai kode pemulihan dari halaman daftar.
 
 ## Foto dan gambar
 
@@ -106,7 +104,8 @@ JastipHub/
         init.js                   # Menyiapkan tabel database
         repositories/             # Membaca dan menyimpan data
         migrations/
-          001_initial.sql         # Susunan tabel lengkap, termasuk foto ulasan
+          001_initial.sql         # Susunan tabel awal, termasuk foto ulasan
+          002_remove_account_recovery.js # Menghapus kolom fitur akun yang sudah dihapus
 
   jastiphub-frontend/
     index.html                    # Halaman awal yang memuat aplikasi

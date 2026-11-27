@@ -5,8 +5,6 @@ import { initDatabase } from './database/init.js';
 import { createRepositories } from './database/repositories/index.js';
 import { createApp } from './app.js';
 import { errorHandler, missing } from './errors.js';
-import { writeLocalResetLauncher } from './local-reset.js';
-import { token } from './security.js';
 import { mountFrontend } from './web.js';
 
 let db;
@@ -14,8 +12,7 @@ let server;
 let vite;
 let cleanup;
 try {
-  const settings = configuration();
-  const config = { ...settings, localResetKey: settings.localPasswordReset ? token() : null };
+  const config = configuration();
   const dev = process.argv.includes('--dev');
   if (dev && config.production)
     throw new Error('Gunakan npm run build lalu npm start untuk production.');
@@ -28,14 +25,7 @@ try {
   app.use((req, res, next) => next(missing()));
   app.use(errorHandler);
 
-  server.listen(config.port, config.host, async () => {
-    if (config.localResetKey) {
-      try {
-        await writeLocalResetLauncher(config);
-      } catch {
-        console.error('File pembuka JastipHub lokal gagal dibuat.');
-      }
-    }
+  server.listen(config.port, config.host, () => {
     console.log(`JastipHub: http://${config.host}:${config.port}`);
   });
   server.on('error', (error) => {

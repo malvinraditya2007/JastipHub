@@ -10,7 +10,6 @@ import { ExplorePage } from './pages/ExplorePage';
 import { JastiperPage } from './pages/JastiperPage';
 import { MyTripsPage } from './pages/MyTripsPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { ReviewPage } from './pages/ReviewPage';
 import { TripDetailPage } from './pages/TripDetailPage';
 import { TripEditorPage } from './pages/TripEditorPage';
@@ -21,7 +20,6 @@ const PAGE_TITLES = {
   '/my-trips': 'My Trips',
   '/login': 'Masuk',
   '/register': 'Daftar',
-  '/reset-password': 'Atur Ulang Password',
   '/profile': 'Profil',
   '/trips/baru': 'Buat Trip',
 };
@@ -86,7 +84,6 @@ function App() {
         </Route>
         <Route path="login" element={<AuthPage key="login" />} />
         <Route path="register" element={<AuthPage key="register" register />} />
-        <Route path="reset-password" element={<ResetPasswordPage />} />
       </Routes>
       <Notices />
     </>

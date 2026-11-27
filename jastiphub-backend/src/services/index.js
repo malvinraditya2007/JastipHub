@@ -6,7 +6,7 @@ import { createMediaService } from './media-service.js';
 
 export async function createServices(repositories, config) {
   return {
-    auth: await createAuthService(repositories, config),
+    auth: await createAuthService(repositories),
     users: createUserService(repositories),
     trips: createTripService(repositories),
     interactions: createInteractionService(repositories),

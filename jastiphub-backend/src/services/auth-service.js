@@ -1,35 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { ApiError, missing } from '../errors.js';
-import {
-  token,
-  sha256,
-  hashPassword,
-  verifyPassword,
-  recoveryCode,
-  recoveryHash,
-  equal,
-} from '../security.js';
+import { ApiError } from '../errors.js';
+import { token, sha256, hashPassword, verifyPassword } from '../security.js';
 import { createUserService } from './user-service.js';
 
 export const SESSION_DURATION = 14 * 24 * 60 * 60 * 1000;
 
-async function changeLocalPassword(repositories, { handle, password }) {
-  const passwordHash = await hashPassword(password);
-  await repositories.transaction(async (transaction) => {
-    const account = await transaction.users.findByHandle(handle);
-    if (!account) {
-      throw new ApiError(404, 'NOT_FOUND', 'Akun tidak ditemukan.');
-    }
-    await transaction.users.updateCredentials(
-      account.id,
-      passwordHash,
-      recoveryHash(recoveryCode()),
-    );
-    await transaction.sessions.deleteByUser(account.id);
-  });
-}
-
-export async function createAuthService(repositories, config) {
+export async function createAuthService(repositories) {
   const users = createUserService(repositories);
   const dummyPasswordHash = await hashPassword(token());
 
@@ -59,19 +35,16 @@ export async function createAuthService(repositories, config) {
 
     async register(data, previousSessionHash) {
       const passwordHash = await hashPassword(data.password);
-      const recovery = recoveryCode();
       const id = randomUUID();
       const session = await repositories.transaction(async (transaction) => {
         await transaction.users.create({
           ...data,
           id,
           passwordHash,
-          recoveryHash: recoveryHash(recovery),
         });
         return makeSession(transaction, id, previousSessionHash);
       });
-      const result = await loginResult(id, session);
-      return config.localPasswordReset ? result : { ...result, recoveryCode: recovery };
+      return loginResult(id, session);
     },
 
     async login(data, previousSessionHash) {
@@ -91,33 +64,6 @@ export async function createAuthService(repositories, config) {
         return makeSession(transaction, account.id, previousSessionHash);
       });
       return loginResult(account.id, session);
-    },
-
-    async resetLocalPassword(data) {
-      if (!config.localPasswordReset) throw missing();
-      await changeLocalPassword(repositories, data);
-      return { message: 'Password diperbarui.' };
-    },
-
-    async resetPassword(data) {
-      const passwordHash = await hashPassword(data.password);
-      const recovery = recoveryCode();
-      await repositories.transaction(async (transaction) => {
-        const account = await transaction.users.findByHandle(data.handle);
-        if (
-          !account ||
-          account.is_demo ||
-          !equal(recoveryHash(data.recoveryCode), account.recovery_hash)
-        ) {
-          throw new ApiError(422, 'INVALID_RECOVERY', 'Username atau kode pemulihan belum sesuai.');
-        }
-        await transaction.users.updateCredentials(account.id, passwordHash, recoveryHash(recovery));
-        await transaction.sessions.deleteByUser(account.id);
-      });
-      return {
-        recoveryCode: recovery,
-        message: 'Password diperbarui. Simpan kode pemulihan pengganti lalu masuk kembali.',
-      };
     },
 
     async logout(sessionHash) {

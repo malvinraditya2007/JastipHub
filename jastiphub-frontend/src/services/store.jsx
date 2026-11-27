@@ -5,13 +5,6 @@ import { createResourceCache } from './resource-cache';
 const Context = createContext(null);
 export const useApp = () => useContext(Context);
 
-function takeLocalResetKey() {
-  const { pathname, search, hash } = window.location;
-  if (pathname !== '/login' || !hash.startsWith('#local-reset=')) return null;
-  window.history.replaceState(window.history.state, '', pathname + search);
-  return hash.slice('#local-reset='.length);
-}
-
 export function Store({ children }) {
   // State sesi dan notifikasi yang dipakai bersama oleh semua halaman.
   const [user, setUser] = useState(null);
@@ -20,8 +13,6 @@ export function Store({ children }) {
   const [message, setMessage] = useState('');
   const [revision, setRevision] = useState(0);
   const [resourceCache] = useState(() => createResourceCache());
-  const [localPasswordReset, setLocalPasswordReset] = useState(false);
-  const [localResetReady, setLocalResetReady] = useState(false);
   // Mencegah request simpan favorit yang sama terkirim bersamaan.
   const locks = useRef(new Set());
   const invalidate = useCallback(() => {
@@ -29,27 +20,12 @@ export function Store({ children }) {
     setRevision((n) => n + 1);
   }, [resourceCache]);
   const boot = useCallback(async () => {
-    const key = takeLocalResetKey();
     setError('');
     setReady(false);
     try {
       const session = await request('/auth/session');
       setUser(session.user);
       setCsrfToken(session.csrfToken);
-      setLocalPasswordReset(session.localPasswordReset);
-      let resetReady = session.localResetReady;
-      if (key && session.localPasswordReset) {
-        try {
-          const result = await request('/auth/local-reset/unlock', {
-            method: 'POST',
-            body: { key },
-          });
-          resetReady = result.unlocked;
-        } catch (error) {
-          setMessage(error.message);
-        }
-      }
-      setLocalResetReady(resetReady);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -142,8 +118,6 @@ export function Store({ children }) {
         ready,
         error,
         boot,
-        localPasswordReset,
-        localResetReady,
         revision,
         resourceCache,
         invalidate,

@@ -6,9 +6,6 @@ const scrypt = promisify(scryptCallback);
 const parameters = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 export const token = () => randomBytes(32).toString('hex');
 export const sha256 = (value) => createHash('sha256').update(value).digest('hex');
-export const recoveryCode = () =>
-  randomBytes(16).toString('hex').toUpperCase().match(/.{4}/g).join('-');
-export const recoveryHash = (code) => sha256(code.replace(/[-\s]/g, '').toUpperCase());
 export function equal(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
   const left = Buffer.from(a);
